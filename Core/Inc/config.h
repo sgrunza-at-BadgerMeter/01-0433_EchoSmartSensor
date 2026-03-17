@@ -21,6 +21,61 @@
 // Defined in crc.c
 extern CRC_HandleTypeDef hcrc;
 
+/*
+ * @brief Default values used if Flash config is invalid
+ *
+ */
+
+#define TRACK_FIRST		0
+#define TRACK_LAST		1
+
+#define TANK_DEPTH_INCR_FT	12		// Tank depth increment is 1.0"
+
+
+#define DEFAULT_TANK_DEPTH	10		// Default tank is 10 ft deep
+#define DEFAULT_MIN_LEVEL	3		// Default min level is 3 ft
+#define DEFAULT_PING_DELAY	5		// 50 ms delay
+#define DEFAULT_UPDATE_RATE	10		// number of WF groups in WF average
+#define DEFAULT_SMOOTHING	5		// number of cells to run smoothing average
+#define DEFAULT_SENSITIVITY	20		// percentage for derivate sensitivity
+#define DEFAULT_ALGORITHM	TRACK_FIRST	// algorithm for tracking
+#define DEFAULT_CANDIDATES	5		// candidates to track, 5 is max number
+#define DEFAULT_WALL_ZONE	(TANK_DEPTH_INCR_FT/2)	// 1/2 Foot from Tank Depth
+#define DEFAULT_SETTLING_ZONE	1		// 1 is on, 0 is off
+#define DEFAULT_CELL_LIMIT	1
+#define DEFAULT_DELTA_Y		10		// Delay Y Coeff - percentage
+#define DEFAULT_HISTORY		130
+#define DEFAULT_GATE_MIN	(TANK_DEPTH_INCR_FT * 2)	// 2 Foot from track
+#define DEFAULT_GATE_MAX	(TANK_DEPTH_INCR_FT * 2)	// 2 Foot from track
+#define DEFAULT_SOUND_SPEED	4862		// Speed in Ft per second
+#define DEFAULT_GAIN_INCREMENT	1		// Amount of change in auto gain * 10
+#define DEFAULT_WALLZONE_AG	40		// Percentage of auto gain in wall zone
+#define DEFAULT_AG_SETPOINT	10		// Set point for auto gain
+#define DEFAULT_GAIN_BAND	20
+
+#define DEFAULT_WIPER_DELAY	240		// Delay time in Minutes for Wiper Activation
+
+
+/* Define for Units Field */
+#define UNITS_FEET			0
+#define UNITS_INCH			1
+#define UNITS_METER			2
+#define UNITS_CM			3
+
+/* Defines for Echo Loss Action */
+#define ECHO_LOSS_ACTION_LOW		0	// Set output at 40mA on loss of signal or during init
+#define ECHO_LOSS_ACTION_HIGH		1	// Set output at 20mA on loss of signal or during init
+#define ECHO_LOSS_ACTION_CYCLE		2	// Cycle output between 4-20mA on loss of signal or during init
+
+#define I_LOOP_MIN			330
+#define I_LOOP_MAX			3800
+
+#define DEFAULT_NAME			"Sensor Name"
+#define DEFAULT_NAME_LEN		strlen(DEFAULT_NAME)
+#define MAX_NAME_LEN			24
+
+
+
 /**
  * @brief Definition of the types of equipment in the system
  *
@@ -65,6 +120,56 @@ typedef struct SSP_CONFIG_T
    SSP_CONFIG_UUID_T	uuid;			///< Unique ID number - 96-bits long
    uint16_t		turb_50_ntu_cal;	///< value of ADC for 50 NTU
    uint16_t		turb_0_ntu_cal;		///< value of ADC for 0 NTU
+
+   uint16_t		tankDepth;		///< tank depth in inches or cm
+   uint8_t		dwellTime;
+   uint16_t		minLevel;		///< inches or cm
+   uint16_t		maxLevel;		///< inches or cm
+   uint8_t		pingDelay;
+   uint8_t		updateRate;
+   uint8_t		smoothing;
+   uint8_t		deltaSmoothing;
+   uint8_t		sensitivity;
+   uint8_t		algorithm;
+   uint8_t		candidates;
+   uint16_t		wallZone;		///< inches or cm
+   uint8_t		settlingZone;
+   uint8_t		cellLimit;
+   uint16_t		gateMin;		///< min distance from left gate to track in basic increments
+   uint16_t		gateMax;		///< min distance from right gate to track
+   uint8_t		history;
+   uint16_t		speedSound;		///< speed of sound in FPS: 1000 - 6000
+   uint8_t		gainIncrement;		///< range 5 -50
+   uint8_t		wallZoneAG;		///< desired raw candidate signal level if candidate in wall zone
+   uint8_t		AGsetPoint;		///< desired raw candidate signal level if candidate not in wall zone
+   uint8_t		gainBand;		///< percentage of maximum gain that gain can be adjusted from the Gain Band Mid Point
+   uint8_t		units;			///< 0 = ft, 1 = inches, 2 = meters, 3 = centimeters
+   uint8_t		wiperDelay;		///< 0 to 240
+   uint8_t		setPoint4ma;		///< measured in tank units - based on Measure
+   uint8_t		setPoint20mA;
+   uint8_t		echoLossAction;		///< 0 = 4mA, 1 = 20mA, 2 = cycle (50% duty cycle)
+   uint8_t		echoDelay;
+   uint16_t		levelLoopMin;		///< value that provides 4mA loop current (12-bits)
+   uint16_t		levelLoopMax;		///< value that provides 20mA loop current (12-bits)
+   int16_t		minGain;		///< value for DAC to have minimum gain on signal amp
+   int16_t		maxGain;		///< value for DAC to have maximum gain on signal amp
+   char			name[ MAX_NAME_LEN ];
+   uint16_t		turbLoopMin;		///< value that provides 4mA loop current (12-bits) (AuxLoop)
+   uint16_t		turbLoopMax;		///< value that provides 20mA loop current (12-bits) (AuxLoop)
+
+#define MAX_USER_DATA_FIELD1    16              //* 1x16 byte array
+#define MAX_USER_DATA_FIELD2    18              //* 1x18 byte array
+#define MAX_USER_DATA_FIELD3    96              //* 3x32 byte array
+#define MAX_USER_DATA_FIELD4    32 		//* 8x4 byte array
+
+   uint8_t		UserData_Field1[MAX_USER_DATA_FIELD1];	/* User Data - Field 1 */
+   uint8_t		UserData_Field2[MAX_USER_DATA_FIELD2];	/* User Data - Field 2 */
+   uint8_t		UserData_Field3[MAX_USER_DATA_FIELD3];	/* User Data - Field 3 */
+   uint8_t		UserData_Field4[MAX_USER_DATA_FIELD4];	/* User Data - Field 4 */
+
+   int16_t		fixedGainBandMidPoint;	///< fixed value
+
+
    uint32_t		crc32;			///< Check-value from CRC HW
 } SSP_CONFIG_T;
 
@@ -106,6 +211,12 @@ typedef struct SSP_STATUS_T
    uint8_t		turbidityTimeout;	///< set to HIGH_TURBIDITY_TIMEOUT when wiper started
    uint8_t		turbidityHoldOffTimer;	///< seconds to hold off starting wiper
    bool			wiperActive;		///< true if wiper is on
+   //
+   bool			auto_gain;		///< 1 = auto gain on, 0 = auto gain off
+   bool			echo_loss;		///< 1 = echo loss, 0 = echo has not been lost
+   bool			composite_wf;		///< 1 = use composite waveform, 0 = not composite wf
+   bool			fix_gain_band;		///< 1 = use fixed gain band mid point
+   bool			need_setup;		///< 1 = unit requires setup
 
 } SSP_STATUS_T;
 
