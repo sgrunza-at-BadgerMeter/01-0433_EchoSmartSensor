@@ -1,0 +1,70 @@
+SSP_523 notes:
+--------------------------
+
+TIM1
+	TIM1_CH1 (PA8) TXPULSE_B and TIM1_CH1N (PA7) TXPULSE_A for Sonar output pulse transformer
+
+TIM2
+	TIM2_CH3 (PB10) unused but available PWM output
+
+TIM3
+	TIM3_CH3 (PB0) nLED (D17) GPIO output or PWM output TIM3_CH3
+	TIM3_CH2 (PB5) nSTATUS GPIO output or PWM output TIM3_CH2
+	
+TIM4
+	125MHz divided by 625 to give a 5 us interrupt to use for ADC2 sonar sampling because LPTIM1 sampling isn't working
+	
+TIM5
+	125MHz divided by 125 to give 1 us counter for checking sample times for sonar ping
+	
+TIM6
+	system Timebase source
+	
+TIM7
+	used for DAC1_OUT2 for Turbidity LED signal generation with Trigger Out Event
+	
+TIM8
+	TIM8_CH3 (PB12) for LOOP2_DAC output SWIF output for Turbidity data
+	
+TIM12
+	TIM12_CH2 for PB15 for WIPER_MOTOR output control via PWM or GPIO
+	
+TIM15
+	TIM15_CH2 (PA3) for LOOP1_DAC output SWIF output for Sonar data
+	
+LPTIM1 -- No longer used since it wasn't working as expected
+	LPTIM1_CH1 (PB2) used for ADC1 sampling rate.  
+		125MHz / 625 = 200kHz (5uS between samples)
+		200MHz / 1000 = 200kHz
+		250MHz / 12,500 = 200kHz
+		160MHz / 50 = 3.2MHz (16x oversample gives 200 kHz effective sample rate)
+		
+ADC_INP0
+	Sample at 3.2MHz with a 16x oversample for a sample rate of 200kHz for sub-Nyquist sampling
+	or
+	Sample at 3.2MHz with a 2x oversample for a 1600kHz sample rate for Nyquist rate sampling
+	
+UART4
+	RS485 with hardware driver enable
+	
+USART1
+	Serial console for debug/development
+	
+------------------------------------------------------------
+Interrupt Priorities
+------------------------------------------------------------
+TIM6	14		SysTick_IRQn	TICK_INT_PRIORITY	stm32h5xx_hal_conf.h
+TIM4	4		TIM4_IRQn							tim.c
+TIM1	1		TIM1_CC_IRQn						tim.c
+ADC2	0		ADC2_IRQn							adc.c
+ADC1	0		ADC1_IRQn							adc.c
+DTS		0		DTS_IRQn							dts.c
+I2C1	0		I2C1_EV_IRQn						i2c.c
+UART4	0		UART4_IRQn							usart.c
+USART1	0		USART1_IRQn							usart.c
+
+
+Files to fix after code re-generation:
+stm32h5xx_hal_conf.h
+tim.c
+stm32h5xx_it.c
