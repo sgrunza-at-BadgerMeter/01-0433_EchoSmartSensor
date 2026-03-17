@@ -38,6 +38,8 @@ void
    // Ensure motor is currently off
    GPIO_wiper_off();
 
+
+
    // TODO: Finish wiper logic
 
    return;

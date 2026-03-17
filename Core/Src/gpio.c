@@ -24,6 +24,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "adc.h"
+#include "config.h"
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -248,6 +249,7 @@ void GPIO_turbidity_led_off( void )
 	    T_LED_Pin,
 	    GPIO_PIN_RESET);
 #endif
+
    return;
 } // end of GPIO_turbidity_led_off()
 
@@ -310,6 +312,9 @@ void GPIO_wiper_on( void )
 	    WIPER_MOTOR_Pin,
 	    GPIO_PIN_SET);
 #endif
+
+   SSP_status.wiperActive = true;
+
    return;
 } // end of GPIO_wiper_on()
 
@@ -333,6 +338,9 @@ void GPIO_wiper_off( void )
 	    WIPER_MOTOR_Pin,
 	    GPIO_PIN_RESET);
 #endif
+
+   SSP_status.wiperActive = false;
+
    return;
 } // end of GPIO_wiper_off()
 

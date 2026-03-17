@@ -218,6 +218,9 @@ typedef struct SSP_STATUS_T
    bool			fix_gain_band;		///< 1 = use fixed gain band mid point
    bool			need_setup;		///< 1 = unit requires setup
 
+   uint16_t		levelLoop_value;	///< Level 4-20 mA
+   uint16_t		auxLoop_value;		///< Aux 4-20 mA
+
 } SSP_STATUS_T;
 
 

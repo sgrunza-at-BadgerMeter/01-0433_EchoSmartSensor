@@ -69,12 +69,27 @@ void
 
    state = INIT_STATE;
 
+   // Initialize status structure
+   SSP_status.auto_gain = false;
+   SSP_status.composite_wf = 0;
+   SSP_status.echo_loss = false;
+   SSP_status.fix_gain_band = false;
+   SSP_status.need_setup = true;
+   SSP_status.ntu = 0;
+   SSP_status.previousNTU = 0;
+   SSP_status.turbidityHoldOffTimer = 0;
+   SSP_status.turbidityTimeout = 0;
+   SSP_status.leveLoop_value = SSP_configuration.levelLoopMin;
+   SSP_status.auxLoop_value = SSP_configuration.turbLoopMin;
+
    while( 1 )
    {
 
       switch( state )
       {
 	 case INIT_STATE:
+	    rs485_update_loops( &SSP_status );
+	    state = SETUP_STATE;
 	    break;
 
 	 case SETUP_STATE:
