@@ -19,6 +19,7 @@
 #include "config.h"
 #include "turbidity.h"
 #include "wiper.h"
+#include "system_io.h"
 
 
 #define SRC_MCP_C_
@@ -79,7 +80,7 @@ void
    SSP_status.previousNTU = 0;
    SSP_status.turbidityHoldOffTimer = 0;
    SSP_status.turbidityTimeout = 0;
-   SSP_status.leveLoop_value = SSP_configuration.levelLoopMin;
+   SSP_status.levelLoop_value = SSP_configuration.levelLoopMin;
    SSP_status.auxLoop_value = SSP_configuration.turbLoopMin;
 
    while( 1 )
@@ -88,7 +89,8 @@ void
       switch( state )
       {
 	 case INIT_STATE:
-	    rs485_update_loops( &SSP_status );
+	    updateLevelLoop( SSP_status.levelLoop_value );
+	    updateTurbLoop( SSP_status.auxLoop_value );
 	    state = SETUP_STATE;
 	    break;
 

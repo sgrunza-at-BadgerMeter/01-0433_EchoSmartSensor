@@ -124,8 +124,8 @@ void
    rs485_disable_tx(
       void );
 
-void updateLevelLoop( void );
-void updateTurbLoop( void );
+void updateLevelLoop( uint16_t	dacCounts );
+void updateTurbLoop( uint16_t	dacCounts );
 
 
 #endif /* INC_SYSTEM_IO_H_ */

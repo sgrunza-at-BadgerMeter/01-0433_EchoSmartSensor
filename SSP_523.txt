@@ -1,6 +1,6 @@
 Configuration	SSP_523
 STM32CubeMX 	6.16.1
-Date	03/12/2026
+Date	04/14/2026
 MCU	STM32H523CCUx
 
 
@@ -162,7 +162,7 @@ Project Settings :
 Project Name : SSP_523
 Project Folder : C:\Projects_local\01-0433_EchoSmart_git
 Toolchain / IDE : STM32CubeIDE
-Firmware Package Name and Version : STM32Cube FW_H5 V1.5.0
+Firmware Package Name and Version : STM32Cube FW_H5 V1.5.1
 
 
 Code Generation Settings : 

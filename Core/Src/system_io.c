@@ -147,7 +147,7 @@ void rs485_rx(ULONG thread_input)
    }
 
    return;
-} // end of rs485_rx()
+} // end of rs485_rx() thread
 
 /*
  **********************************************************************
@@ -211,7 +211,7 @@ int8_t
    }
 
    return( ret );
-} // end of rs485_tx_buf()
+} // end of rs485_prepare_tx_buf()
 
 /*
  **********************************************************************
@@ -606,7 +606,7 @@ void
  * @return none
  **********************************************************************
  */
-void updateLevelLoop( void )
+void updateLevelLoop( uint16_t counts )
 {
 
    return;
@@ -621,11 +621,10 @@ void updateLevelLoop( void )
  * @return none
  **********************************************************************
  */
-void updateTurbLoop( void )
+void updateTurbLoop( uint16_t counts )
 {
 
    return;
 } // end of updateTurbLoop()
-
 
 // end of file system_io.c

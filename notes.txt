@@ -63,6 +63,13 @@ I2C1	0		I2C1_EV_IRQn						i2c.c
 UART4	0		UART4_IRQn							usart.c
 USART1	0		USART1_IRQn							usart.c
 
+------------------------------------------------------------
+DMA
+------------------------------------------------------------
+GPDMA1		Channel 0		UART4_RX
+GPDMA1		Channel 1		UART4_TX
+
+
 
 Files to fix after code re-generation:
 stm32h5xx_hal_conf.h
