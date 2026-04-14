@@ -28,7 +28,6 @@
 #include "gpdma.h"
 #include "i2c.h"
 #include "icache.h"
-#include "ramcfg.h"
 #include "rtc.h"
 #include "tim.h"
 #include "usart.h"
@@ -150,7 +149,6 @@ int main(void)
   MX_ICACHE_Init();
   MX_DCACHE1_Init();
   MX_FLASH_Init();
-  MX_RAMCFG_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM7_Init();
