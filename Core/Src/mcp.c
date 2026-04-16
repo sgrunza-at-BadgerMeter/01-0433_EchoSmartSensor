@@ -127,7 +127,7 @@ void
 
       // TODO:  Remove the following debug code
       {
-	 printf( "mcp ping %ld\r\n", pingCount++ );
+	 //printf( "mcp ping %ld\r\n", pingCount++ );
 	 tx_thread_sleep( 10 * TX_TIMER_TICKS_PER_SECOND );	// place-holder until final logic is in place
       }
 

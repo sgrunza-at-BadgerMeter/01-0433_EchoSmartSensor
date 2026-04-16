@@ -110,6 +110,7 @@ void
    char		cmd[ MAX_FIFO_ENTRY_LEN ];
    uint8_t	loops;
    int8_t	ret;
+   uint16_t	unused;
 
    myID = tx_thread_identify();
 
@@ -146,7 +147,8 @@ void
 	 memset( cmd, 0, MAX_FIFO_ENTRY_LEN );
 
 	 ret = fifo_pop( &console_rx_buf,	// ptr to queue
-			 cmd);			// ptr into which to put extracted command
+			 cmd, 			// ptr into which to put extracted command
+			 &unused );
 	 if( ret == FIFO_SUCCESS )
 	 {
 	    if( cmd[0] != '\0' )
@@ -793,6 +795,7 @@ void cmd_configure( char     *msg )
    if( *c == '\0' )
    {
       // No more arguments so display current in-RAM config
+
       printf( "\r\n" );
       printf( "configuration structure holds:\r\n" );
       printf( "\tserialNumber:\t%d\r\n", SSP_configuration.serialNumber );
@@ -808,6 +811,9 @@ void cmd_configure( char     *msg )
       printf( "\tgainAdjust:  \t%d\r\n", SSP_configuration.gainAdjust );
       printf( "\tUUID:        \t0x%8.8lx %8.8lx %8.8lx\r\n", SSP_configuration.uuid.first,
 	      SSP_configuration.uuid.second, SSP_configuration.uuid.third );
+
+
+      printf( "sizeof(SSP_configuration) is %ld\r\n", sizeof(SSP_configuration) );
 
       printf( "\r\n" );
       done = true;

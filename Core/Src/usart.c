@@ -449,7 +449,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	    }
 
 	    // Message is done so push onto the message FIFO
-	    retVal = fifo_push( &console_rx_buf, (uint8_t *)dbg_msg );
+	    retVal = fifo_push( &console_rx_buf, (uint8_t *)dbg_msg, strlen(dbg_msg) );
 	    if( retVal != FIFO_SUCCESS )
 	    {
 	       // Couldn't put the message on the FIFO
@@ -482,7 +482,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       if( goodMsg )
       {
 	 // This message timed out so it is a complete message or an error
-	 retVal = fifo_push( &rs485_buffer, rs485_msg_buffer );
+	 retVal = fifo_push(
+		     &rs485_buffer, 		// ptr to control structure
+		     rs485_msg_buffer,		// ptr to data received
+		     huart->RxXferCount );	// number of bytes received
 	 if( retVal != FIFO_SUCCESS )
 	 {
 	    // Couldn't put the message on the FIFO
@@ -490,7 +493,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	 }
 
 	 // Setup for next message
-	 memset( rs485_msg_buffer, 0, RS485_MAX_MSG_LEN );
+	 memset( rs485_msg_buffer, 0, MAX_FIFO_ENTRY_LEN );
 
 	 // Make sure the receive processing thread is awake
 	 if( rs485_thread_sleeping )
@@ -669,26 +672,29 @@ void
    if( huart->Instance == UART4 )
    {
       // This is the RS485 / Modbus UART
-      retVal = fifo_push( &rs485_buffer, rs485_msg_buffer );
-      if( retVal != FIFO_SUCCESS )
+      if( huart->RxXferCount != 0 )
       {
-	 // Couldn't put the message on the FIFO
-	 printf( "fifo_push() error at line %d in file %s\r\n", __LINE__, __FILE__ );
+	 retVal = fifo_push( &rs485_buffer, rs485_msg_buffer, huart->RxXferCount );
+	 if( retVal != FIFO_SUCCESS )
+	 {
+	    // Couldn't put the message on the FIFO
+	    printf( "fifo_push() error at line %d in file %s\r\n", __LINE__, __FILE__ );
+	 }
+
+	 // Make sure the receive processing thread is awake to process this msg
+	 if( rs485_thread_sleeping )
+	 {
+	    // Send wake up to RS485 msg processing task
+	    TX_THREAD	*id;
+
+	    id = getID_rs485_rx_thread();
+	    tx_thread_resume( id );
+	    rs485_thread_sleeping = false;
+	 }
       }
 
       // Setup for next message
-      memset( rs485_msg_buffer, 0, RS485_MAX_MSG_LEN );
-
-      // Make sure the receive processing thread is awake
-      if( rs485_thread_sleeping )
-      {
-	 // Send wake up to RS485 msg processing task
-	 TX_THREAD	*id;
-
-	 id = getID_rs485_rx_thread();
-	 tx_thread_resume( id );
-	 rs485_thread_sleeping = false;
-      }
+      memset( rs485_msg_buffer, 0, MAX_FIFO_ENTRY_LEN );
    }
 
    //printf( "HAL_UART_ErrorCallback() at line %d\r\n", __LINE__ );

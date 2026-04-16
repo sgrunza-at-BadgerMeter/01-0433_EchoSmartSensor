@@ -22,6 +22,8 @@
 #include "system_io.h"
 #include "usart.h"
 #include "fifo.h"
+#include "crc.h"
+
 
 // Status flag to show status of the RS485 message processing task
 volatile bool	rs485_thread_sleeping = false;
@@ -41,6 +43,9 @@ extern UART_HandleTypeDef	huart4;
 // Defined in tim.c
 // used during debugging the Modbus stuff but also in sonar
 extern TIM_HandleTypeDef 	htim5;
+
+// Defined in crc.c
+extern CRC_HandleTypeDef 	hcrc;
 /*
  **********************************************************************
  * @brief rs485_rx() has a FIFO to receive MODBUS RTU messages from the
@@ -89,10 +94,22 @@ void rs485_rx(ULONG thread_input)
       // Currently using time-slicing so process messages until there are none left
       while( rs485_buffer.entries > 0 )
       {
+	 // Check on the UART status
+	 if( !transmit_msg.tx_active )
+	 {
+	    // Not currently transmitting
+	    if (huart4.RxState != HAL_UART_STATE_BUSY_RX )
+	    {
+	       // Not busy with receiving so start a receive
+	       rs485_receive_msg();
+	    }
+	 }
+
 	 pADU = (MODBUS_ADU_T *)&buffer;
 
-	 ret = fifo_pop( &rs485_buffer,		// ptr to queue
-			 (char *)pADU);		// ptr into which to put extracted command
+	 ret = fifo_pop( &rs485_buffer,			// ptr to queue
+			 (char *)&(pADU->address), 	// ptr into which to put extracted command
+			 (uint16_t *) &(pADU->length) );// ptr into which to put command length
 	 if( ret == FIFO_SUCCESS )
 	 {
 	    if( pADU->fc != '\0' )
@@ -133,17 +150,6 @@ void rs485_rx(ULONG thread_input)
       // A health check thread could detect this condition or the transmit complete
       // ISR could check for the condition
 
-      if( !transmit_msg.tx_active )
-      {
-	 // Not currently transmitting
-	 if (huart4.RxState != HAL_UART_STATE_BUSY_RX )
-	 {
-	    // Not busy with receiving so start a receive
-	    rs485_receive_msg();
-	 }
-      }
-
-
    }
 
    return;
@@ -153,6 +159,9 @@ void rs485_rx(ULONG thread_input)
  **********************************************************************
  * @brief process_rs485_msg() handles a single MODBUS / SSP message
  * system.
+ *
+ * No data checks have been done at this point.  The CRC should be
+ * verified
  *
  * @param ulParameters - unused
  *
@@ -164,10 +173,51 @@ void
       MODBUS_ADU_T	*msg )
 {
 
-   printf( "RS485 msg received with address 0x%2.2x, fc = 0x%2.2x, payload = 0x%2.2x\r\n",
-	 msg->address,
-	 msg->fc,
-	 msg->payload );
+   uint16_t	crc_received;
+   uint32_t	crc_calculated;
+
+   uint16_t	length;
+   union
+   {
+      uint8_t	*as8;
+      uint32_t	*as32;
+   } 	data;
+
+   uint8_t	*crcPtr;
+
+   if( msg->length > 3 )
+   {
+      // Messages smaller than 4 bytes are not valid
+
+      data.as8 = &(msg->address);
+      length = msg->length;
+
+      length -= 2;	// remove the 2 bytes of CRC from the length
+
+      crcPtr = data.as8 + length; // point to where the CRC should be
+      crc_received = (*crcPtr << 8) + *(crcPtr+1);
+
+      crc_calculated = HAL_CRC_Calculate(
+	       &hcrc,
+	       data.as32,		// ptr to data
+	       length );		// number of data bytes
+
+      printf( "RS485 msg received with address 0x%2.2x, fc = 0x%2.2x, payload = 0x%2.2x, length = 0x%4.4x, CRC = 0x%4.4x",
+	      msg->address,
+	      msg->fc,
+	      msg->payload,
+	      msg->length,
+	      crc_received );
+
+      if( crc_received != (uint16_t)crc_calculated )
+      {
+	 printf( "\r\nCRC error:  calculated CRC is 0x%4.4x\r\n", (uint16_t)crc_calculated) ;
+      }
+      else
+      {
+	 printf( " (ok)\r\n" );
+      }
+   }
 
    return;
 } // end of process_rs485_msg()
@@ -333,7 +383,7 @@ void
 /*
  **********************************************************************
  * @brief calculate_crc16_modbus() calculate CCITT CRC-16-MODBUS 16-bit
- * checksum
+ * checksum using STM32H523 Hardware CRC unit
  *
  * @param p - ptr to transmit_msg structure
  *
@@ -345,33 +395,14 @@ void
       RS485_TRANSMIT_MSG_T	*p )
 {
 
-   uint8_t *data;
-   uint16_t length;
-   uint16_t crc = 0xFFFF; // Initial value for Modbus CRC-16
-   uint16_t polynomial = 0xA001; // Reversed polynomial for Modbus CRC-16 (0x8005 reflected)
+   uint32_t			crc_result;
 
-   data = (uint8_t *)(p->msg);
-   length = p->index;
+   crc_result = HAL_CRC_Calculate(
+	    &hcrc,
+	    (uint32_t *)p->msg,	// ptr to data
+	    p->index );		// number of data bytes
 
-   for( uint16_t i = 0; i < length; i++ )
-   {
-      crc ^= data[i]; // XOR current byte with CRC
-      for( uint8_t j = 0; j < 8; j++ )
-      {
-	 if (crc & 0x0001 )
-	 {
-	    // Check if LSB is 1
-	    crc >>= 1; 		// Shift right
-	    crc ^= polynomial; 	// XOR with polynomial
-	 }
-	 else
-	 {
-	    crc >>= 1; // Shift right
-	 }
-      }
-   }
-
-   p->crc = crc;
+   p->crc = (uint16_t) crc_result;
 
    return;
 } // end of calculate_crc16_modbus()

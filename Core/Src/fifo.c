@@ -72,22 +72,23 @@ bool
  *
  * @param msg - message to be placed on the FIFO
  *
+ * @param len - number of bytes in message
+ *
  * @return FIFO_FAILURE if no space left, else return FIFO_SUCCESS
  **********************************************************************
  */
 int8_t
    fifo_push(
       FIFO_T 		*fifo,
-      uint8_t 		*msg )
+      uint8_t 		*msg,
+      uint16_t		len )
 {
 
    int8_t	result;
-   uint16_t	dataLen;
    uint16_t	nextIndex;
 
    // It works until it doesn't
    result = FIFO_SUCCESS;
-   dataLen = strlen( (char *)msg );
 
    if( fifo == NULL )
    {
@@ -95,7 +96,7 @@ int8_t
    }
    else
    {
-      if( dataLen > MAX_FIFO_ENTRY_LEN )
+      if( len > MAX_FIFO_ENTRY_LEN )
       {
 	 // This message is too big for the FIFO entries configured
 	 result = FIFO_FAILURE;
@@ -118,7 +119,8 @@ int8_t
       memset( fifo->item[ fifo->head ], 0, MAX_FIFO_ENTRY_LEN );
 
       // Put data into entry
-      memcpy( fifo->item[ fifo->head ], msg, dataLen );
+      memcpy( fifo->item[ fifo->head ], msg, len );
+      fifo->itemLen[ fifo->head ] = len;
       fifo->entries++;
 
       nextIndex = (fifo->head + 1) % MAX_FIFO_ITEMS;
@@ -143,7 +145,8 @@ int8_t
 int8_t
    fifo_pop(
       FIFO_T 		*fifo,
-      char 		*dst )
+      char 		*dst,
+      uint16_t		*len )
 {
    int8_t	result;
    uint16_t	dataLen;
@@ -155,6 +158,11 @@ int8_t
    if( fifo == NULL )
    {
       // There is no FIFO from which to pop an item
+      result = FIFO_FAILURE;
+   }
+   else if( len == NULL )
+   {
+      // Need someplace to return the length of the item
       result = FIFO_FAILURE;
    }
    else
@@ -174,11 +182,13 @@ int8_t
    if( result == FIFO_SUCCESS )
    {
       src = fifo->item[ fifo->tail ];
-      dataLen = strlen( src );
+      dataLen = fifo->itemLen[ fifo->tail ];
       memcpy( dst, src, dataLen );
       fifo->entries--;
       fifo->tail = (fifo->tail + 1) % MAX_FIFO_ITEMS;
    }
+
+   *len = dataLen;
 
    return( result );
 } // end of fifo_pop()

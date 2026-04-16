@@ -36,8 +36,8 @@ typedef struct FIFO_T
 } FIFO_T;
 
 
-int8_t	fifo_push( FIFO_T *queue, uint8_t *msg );
-int8_t	fifo_pop( FIFO_T *queue, char *msg );
+int8_t	fifo_push( FIFO_T *queue, uint8_t *msg, uint16_t len );
+int8_t	fifo_pop( FIFO_T *queue, char *msg, uint16_t *len );
 bool	fifo_spaceLeft( FIFO_T *q );
 void	fifo_init( FIFO_T *queue );
 

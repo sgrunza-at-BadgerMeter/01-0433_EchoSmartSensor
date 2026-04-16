@@ -105,7 +105,7 @@ typedef struct SSP_CONFIG_UUID_T
  * can be changed by writing new values to Flash and then issuing a
  * reset command.
  */
-typedef struct SSP_CONFIG_T
+typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
 {
    uint16_t		serialNumber;		///< Serial number
    uint8_t		hw_id;			///< Hardware ID

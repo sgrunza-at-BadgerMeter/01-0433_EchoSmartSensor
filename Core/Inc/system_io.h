@@ -20,8 +20,11 @@
 /**
  * @brief This is the maximum number of bytes in an RS-485 MODBUS
  * or SSP message
+ *
+ * Need to have large messages for sending waveforms to controller
+ *
  */
-#define RS485_MAX_MSG_LEN	42
+#define RS485_MAX_MSG_LEN	520
 
 // Define result codes for the rs485_ functions
 #define RS485_FAILURE		-1
@@ -30,7 +33,7 @@
 typedef struct RS485_TRANSMIT_MSG_T
 {
    bool		tx_active;			/**< 1 = transmission currently active */
-   uint8_t	index;				/**< number of bytes currently in msg */
+   uint16_t	index;				/**< number of bytes currently in msg */
    uint16_t	crc;				///< 16-bit CRC
    uint8_t	msg[ RS485_MAX_MSG_LEN ];	///< message storage location
 } RS485_TRANSMIT_MSG_T;

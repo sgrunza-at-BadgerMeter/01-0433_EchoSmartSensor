@@ -88,7 +88,8 @@ typedef enum MBUS_RESPONSE_E
 
 typedef struct MODBUS_ADU_T
 {
-   uint8_t	address;	// address
+   uint16_t	length;		// number of bytes in the ADU
+   uint8_t	address;	// address -- first byte of the message
    uint8_t	fc;		// function code
    uint8_t	payload;	// variable length data plus error check
 } MODBUS_ADU_T;		// MODBUS Application Data Unit
