@@ -191,7 +191,7 @@ void
       length -= 2;	// remove the 2 bytes of CRC from the length
 
       crcPtr = data.as8 + length; // point to where the CRC should be
-      crc_received = (*crcPtr << 8) + *(crcPtr+1);
+      crc_received = *crcPtr + (*(crcPtr+1)<<8);
 
       crc_calculated = HAL_CRC_Calculate(
 	       &hcrc,
@@ -205,7 +205,7 @@ void
 	      msg->length,
 	      crc_received );
 
-      display_message( &(msg->address), msg->length );
+      //display_message( &(msg->address), msg->length );
 
       if( crc_received != (uint16_t)crc_calculated )
       {
@@ -213,7 +213,7 @@ void
       }
       else
       {
-	 printf( " (ok)\r\n" );
+	 //printf( " (ok)\r\n" );
       }
    }
 

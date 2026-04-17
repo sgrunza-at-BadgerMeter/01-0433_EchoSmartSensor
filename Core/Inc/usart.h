@@ -59,7 +59,14 @@ void
 
 HAL_StatusTypeDef
    HAL_UARTEx_ReceiveToTimeout_DMA(
-      UART_HandleTypeDef 		*huart,
+      UART_HandleTypeDef 	*huart,
+      uint8_t 			*pData,
+      uint16_t 			Size,
+      uint16_t			timeout );
+
+HAL_StatusTypeDef
+   HAL_UARTEx_ReceiveToTimeout_IT(
+      UART_HandleTypeDef 	*huart,
       uint8_t 			*pData,
       uint16_t 			Size,
       uint16_t			timeout );

@@ -487,11 +487,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
       if( goodMsg )
       {
+	 uint32_t 	 length;
+
+	 length = MAX_FIFO_ENTRY_LEN - huart->RxXferCount;
+
 	 // This message timed out so it is a complete message or an error
 	 retVal = fifo_push(
 		     &rs485_buffer, 		// ptr to control structure
 		     rs485_msg_buffer,		// ptr to data received
-		     huart->RxXferCount );	// number of bytes received
+		     length );			// number of bytes received
 	 if( retVal != FIFO_SUCCESS )
 	 {
 	    // Couldn't put the message on the FIFO
@@ -575,14 +579,14 @@ HAL_StatusTypeDef
 
    HAL_Delay( 10 );	// Give transceiver time to switch modes
 
-   retVal = HAL_UARTEx_ReceiveToTimeout_DMA(
+   retVal = HAL_UARTEx_ReceiveToTimeout_IT(
 	    &huart4,
 	    (uint8_t *) &rs485_msg_buffer,
 	    MAX_FIFO_ENTRY_LEN,
 	    35 );
    if( retVal != HAL_OK )
    {
-      printf( "HAL_UARTEx_ReceiveToTimeout_DMA() failed with error %d in %s at %d\r\n",
+      printf( "HAL_UARTEx_ReceiveToTimeout_IT() failed with error %d in %s at %d\r\n",
 	       retVal,
 	       __FILE__,
 	       __LINE__ );
@@ -678,7 +682,7 @@ void
 
       if( dataAvailable )
       {
-	 length = MAX_FIFO_ENTRY_LEN - __HAL_DMA_GET_COUNTER(huart->hdmarx );
+	 length = MAX_FIFO_ENTRY_LEN - huart->RxXferCount;
 
 	 if( length != 0 )
 	 {
@@ -798,6 +802,78 @@ HAL_StatusTypeDef
    }
 } // end of HAL_UARTEx_ReceiveToTimeout_DMA()
 
+/**
+ **********************************************************************
+  * @brief Receive an amount of data in interrupt mode till either the expected number
+  *        of data is received or an Receive Time Out event occurs.
+  * @note  Reception is initiated by this function call. Further progress of reception is achieved thanks
+  *        to interrupt services, transferring automatically received data elements in user reception buffer and
+  *        calling registered callbacks at half/end of reception. UART RTO events are also used to consider
+  *        reception phase as ended. In all cases, callback execution will indicate number of received data elements.
+  *
+  *        Adjusted for this specific project
+  *
+  * @param huart UART handle.
+  * @param pData Pointer to data buffer (uint8_t or uint16_t data elements).
+  * @param Size  Amount of data elements (uint8_t or uint16_t) to be received.
+  * @param timeout	Number of bit times of idle before receive timeout
+  * @retval HAL status
+  *********************************************************************
+  */
+HAL_StatusTypeDef
+   HAL_UARTEx_ReceiveToTimeout_IT(
+      UART_HandleTypeDef 	*huart,
+      uint8_t 			*pData,
+      uint16_t 			Size,
+      uint16_t			timeout )
+{
+   HAL_StatusTypeDef status;
+
+   /* Check that a Rx process is not already ongoing */
+   if (huart->RxState == HAL_UART_STATE_READY)
+   {
+      if ((pData == NULL) || (Size == 0U))
+      {
+	 return HAL_ERROR;
+      }
+
+      /* Set Reception type to reception till Receive Time Out Event*/
+      huart->ReceptionType = HAL_UART_RECEPTION_TORTO;
+      huart->RxEventType = HAL_UART_RXEVENT_TC;
+
+      HAL_UART_ReceiverTimeout_Config( huart, timeout );
+
+      HAL_UART_EnableReceiverTimeout( huart );
+
+      status =  UART_Start_Receive_IT(huart, pData, Size);
+
+      /* Check Rx process has been successfully started */
+      if (status == HAL_OK)
+      {
+	 if (huart->ReceptionType == HAL_UART_RECEPTION_TORTO)
+	 {
+	    __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_RTOF);
+	    ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_RTOIE);
+	 }
+	 else
+	 {
+	    /* In case of errors already pending when reception is started,
+	     * Interrupts may have already been raised and lead to reception abortion.
+	     * (Overrun error for instance).
+	     * In such case Reception Type has been reset to HAL_UART_RECEPTION_STANDARD.
+	     **/
+	    status = HAL_ERROR;
+	 }
+      }
+
+      return status;
+   }
+   else
+   {
+      return HAL_BUSY;
+   }
+} // end of HAL_UARTEx_ReceiveToTimeout_IT()
+
 //*********************************************************************
 void
    display_message(
@@ -825,7 +901,7 @@ void
       {
 	 if( cols != 0 )
 	 {
-	    printf( ", " );
+	    printf( " " );
 	 }
 	 printf( "%2.2x", *(data++) );
 	 remain--;
