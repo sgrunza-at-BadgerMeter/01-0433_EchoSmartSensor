@@ -46,9 +46,6 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 
-#define MODBUS_DEBUG_LEN	500
-uint32_t		modbusDebug[ MODBUS_DEBUG_LEN ] = { 0 };
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -398,13 +395,7 @@ void USART1_IRQHandler(void)
 void UART4_IRQHandler(void)
 {
   /* USER CODE BEGIN UART4_IRQn 0 */
-   static uint16_t		index = 0;
 
-   modbusDebug[ index++ ] = htim5.Instance->CNT;
-   if( index > MODBUS_DEBUG_LEN )
-   {
-      index = MODBUS_DEBUG_LEN;
-   }
 
   /* USER CODE END UART4_IRQn 0 */
   HAL_UART_IRQHandler(&huart4);

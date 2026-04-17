@@ -112,11 +112,7 @@ void rs485_rx(ULONG thread_input)
 			 (uint16_t *) &(pADU->length) );// ptr into which to put command length
 	 if( ret == FIFO_SUCCESS )
 	 {
-	    if( pADU->fc != '\0' )
-	    {
-	       // NOTE: Function Code 0 is not valid
-	       process_rs485_msg( pADU );
-	    }
+	    process_rs485_msg( pADU );
 	 }
 
 	 if( !transmit_msg.tx_active )
@@ -202,12 +198,14 @@ void
 	       data.as32,		// ptr to data
 	       length );		// number of data bytes
 
-      printf( "RS485 msg received with address 0x%2.2x, fc = 0x%2.2x, payload = 0x%2.2x, length = 0x%4.4x, CRC = 0x%4.4x",
+      printf( "RS485 msg received with address 0x%2.2x, fc = 0x%2.2x, payload = 0x%2.2x, length = 0x%4.4x, CRC = 0x%4.4x\r\n",
 	      msg->address,
 	      msg->fc,
 	      msg->payload,
 	      msg->length,
 	      crc_received );
+
+      display_message( &(msg->address), msg->length );
 
       if( crc_received != (uint16_t)crc_calculated )
       {
@@ -367,6 +365,9 @@ void
    rs485_enable_tx();
 
    HAL_Delay( 1 );	// Give transceiver time to switch modes
+
+   display_message( transmit_msg.msg, transmit_msg.index );
+
 
    // Start transmission
    ret = HAL_UART_Transmit_IT( &huart4,
@@ -528,6 +529,7 @@ void
       }
 
       printf("About to send message (len = 0x%2.2x) as follows:\r\n", numBytes );
+      fflush( stdout );
       for( i = 0; i < numBytes; i++ )
       {
 	 if( !(i % 8) || (i == 0) )

@@ -53,7 +53,7 @@ TX_QUEUE tx_app_msg_queue;
 
 static TX_THREAD	tx_console_thread;
 
-#define CONSOLE_STACK_SZ	1024
+#define CONSOLE_STACK_SZ	(1024*3)
 uint8_t	consoleStack[ CONSOLE_STACK_SZ ];
 
 static TX_THREAD	rs485_rx_thread;

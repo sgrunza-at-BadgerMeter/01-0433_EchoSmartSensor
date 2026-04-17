@@ -813,7 +813,7 @@ void cmd_configure( char     *msg )
 	      SSP_configuration.uuid.second, SSP_configuration.uuid.third );
 
 
-      printf( "sizeof(SSP_configuration) is %ld\r\n", sizeof(SSP_configuration) );
+      printf( "sizeof(SSP_configuration) is %d\r\n", sizeof(SSP_configuration) );
 
       printf( "\r\n" );
       done = true;

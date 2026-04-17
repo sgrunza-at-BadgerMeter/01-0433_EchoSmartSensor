@@ -208,7 +208,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     handle_GPDMA1_Channel1.Init.Request = GPDMA1_REQUEST_UART4_TX;
     handle_GPDMA1_Channel1.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
     handle_GPDMA1_Channel1.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    handle_GPDMA1_Channel1.Init.SrcInc = DMA_SINC_FIXED;
+    handle_GPDMA1_Channel1.Init.SrcInc = DMA_SINC_INCREMENTED;
     handle_GPDMA1_Channel1.Init.DestInc = DMA_DINC_FIXED;
     handle_GPDMA1_Channel1.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
     handle_GPDMA1_Channel1.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
@@ -236,7 +236,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     handle_GPDMA1_Channel0.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
     handle_GPDMA1_Channel0.Init.Direction = DMA_PERIPH_TO_MEMORY;
     handle_GPDMA1_Channel0.Init.SrcInc = DMA_SINC_FIXED;
-    handle_GPDMA1_Channel0.Init.DestInc = DMA_DINC_FIXED;
+    handle_GPDMA1_Channel0.Init.DestInc = DMA_SINC_INCREMENTED;
     handle_GPDMA1_Channel0.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
     handle_GPDMA1_Channel0.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
     handle_GPDMA1_Channel0.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
@@ -469,6 +469,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
    else if (huart->Instance == UART4 )
    {
       // UART4 -- RS485 interface to Controller / Power Supply
+
       bool		goodMsg = true;
 
       int8_t		retVal;
@@ -477,6 +478,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       {
 	 // Framing error probably from a received BREAK
 	 goodMsg = false;
+      }
+
+      if( __HAL_UART_GET_FLAG(&huart4, UART_CLEAR_RTOF) )		// UART_CLEAR_RTOF
+      {
+	 printf( "HAL_UART_RxCpltCallback() RTO happened\r\n" );
       }
 
       if( goodMsg )
@@ -491,9 +497,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	    // Couldn't put the message on the FIFO
 	    printf( "fifo_push() error at line %d in file %s\r\n", __LINE__, __FILE__ );
 	 }
-
-	 // Setup for next message
-	 memset( rs485_msg_buffer, 0, MAX_FIFO_ENTRY_LEN );
 
 	 // Make sure the receive processing thread is awake
 	 if( rs485_thread_sleeping )
@@ -510,6 +513,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       {
 	 // Maybe should keep a count of bad bytes received?
       }
+
+      // Setup for next message
+      memset( rs485_msg_buffer, 0, MAX_FIFO_ENTRY_LEN );
 
       // rs485_rx() will call rs485_receive_msg() if huart->RxState == HAL_UART_STATE_BUSY_RX
 
@@ -569,38 +575,19 @@ HAL_StatusTypeDef
 
    HAL_Delay( 10 );	// Give transceiver time to switch modes
 
-   HAL_UART_ReceiverTimeout_Config( &huart4, 35 );	// 10 bits per character for 3.5 characters
-
-   HAL_UART_EnableReceiverTimeout( &huart4 );
-
-   ATOMIC_SET_BIT( huart4.Instance->CR1, USART_CR1_RTOIE );
-
-
-
-   // TODO: Switch to ReceiveToTimeOut() code similar to CLC (01_0499_CurrentLoop)
-
-
-
-
-   retVal = HAL_UARTEx_ReceiveToIdle_DMA(
+   retVal = HAL_UARTEx_ReceiveToTimeout_DMA(
 	    &huart4,
 	    (uint8_t *) &rs485_msg_buffer,
-	    MAX_FIFO_ENTRY_LEN );
+	    MAX_FIFO_ENTRY_LEN,
+	    35 );
    if( retVal != HAL_OK )
    {
-      printf( "HAL_UARTEx_ReceiveToIdle_DMA() failed with error %d in %s at %d\r\n",
+      printf( "HAL_UARTEx_ReceiveToTimeout_DMA() failed with error %d in %s at %d\r\n",
 	       retVal,
 	       __FILE__,
 	       __LINE__ );
       printf( "huart4.ErrorCode = %ld (0x%ld)\r\n", huart4.ErrorCode, huart4.ErrorCode );
       fflush( stdout );
-   }
-   else
-   {
-//      printf( "HAL_UARTEx_ReceiveToIdle_IT() started, huart4.RxState = %ld (0x%lx)\r\n",
-//	       huart4.RxState,
-//	       huart4.RxState );
-//      fflush( stdout );
    }
 
    return( retVal );
@@ -642,7 +629,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	 rs485_thread_sleeping = false;
       }
 
-      printf( "HAL_UART_TxCpltCallback() at line %d\r\n", __LINE__ );
+      //printf( "HAL_UART_TxCpltCallback() at line %d\r\n", __LINE__ );
 
    } // end of if (huart->Instance == UART4 )
 
@@ -668,33 +655,55 @@ void
 {
 
    HAL_StatusTypeDef		retVal;
+   bool				dataAvailable;
+   uint32_t			length;
 
    if( huart->Instance == UART4 )
    {
       // This is the RS485 / Modbus UART
-      if( huart->RxXferCount != 0 )
+      dataAvailable = false;
+
+      if( huart->ErrorCode == HAL_UART_ERROR_RTO )
       {
-	 retVal = fifo_push( &rs485_buffer, rs485_msg_buffer, huart->RxXferCount );
-	 if( retVal != FIFO_SUCCESS )
-	 {
-	    // Couldn't put the message on the FIFO
-	    printf( "fifo_push() error at line %d in file %s\r\n", __LINE__, __FILE__ );
-	 }
-
-	 // Make sure the receive processing thread is awake to process this msg
-	 if( rs485_thread_sleeping )
-	 {
-	    // Send wake up to RS485 msg processing task
-	    TX_THREAD	*id;
-
-	    id = getID_rs485_rx_thread();
-	    tx_thread_resume( id );
-	    rs485_thread_sleeping = false;
-	 }
+	 // This is a receiver time out, clear the interrupt
+	 ATOMIC_SET_BIT( huart->Instance->ICR, USART_ICR_RTOCF );
+	 dataAvailable = true;
       }
 
+//      if( (huart->Instance->ISR & USART_ISR_IDLE) == USART_ISR_IDLE )
+//      {
+//	 // Receive idle
+//	 dataAvailable = true;
+//      }
+
+      if( dataAvailable )
+      {
+	 length = MAX_FIFO_ENTRY_LEN - __HAL_DMA_GET_COUNTER(huart->hdmarx );
+
+	 if( length != 0 )
+	 {
+	    retVal = fifo_push( &rs485_buffer, rs485_msg_buffer, length );
+	    if( retVal != FIFO_SUCCESS )
+	    {
+	       // Couldn't put the message on the FIFO
+	       printf( "fifo_push() error at line %d in file %s\r\n", __LINE__, __FILE__ );
+	    }
+
+	    // Make sure the receive processing thread is awake to process this msg
+	    if( rs485_thread_sleeping )
+	    {
+	       // Send wake up to RS485 msg processing task
+	       TX_THREAD	*id;
+
+	       id = getID_rs485_rx_thread();
+	       tx_thread_resume( id );
+	       rs485_thread_sleeping = false;
+	    }
+	 }
+      }
       // Setup for next message
-      memset( rs485_msg_buffer, 0, MAX_FIFO_ENTRY_LEN );
+      // TODO: remove the comment below
+      //memset( rs485_msg_buffer, 0, MAX_FIFO_ENTRY_LEN );
    }
 
    //printf( "HAL_UART_ErrorCallback() at line %d\r\n", __LINE__ );
@@ -702,5 +711,131 @@ void
    return;
 } // end of HAL_UART_ErrorCallback()
 
+/**
+  * @brief Receive an amount of data in DMA mode till either the expected number
+  *        of data is received or an Receive Time Out event occurs.
+  * @note  Reception is initiated by this function call. Further progress of reception is achieved thanks
+  *        to DMA services, transferring automatically received data elements in user reception buffer and
+  *        calling registered callbacks at half/end of reception. UART RTO events are also used to consider
+  *        reception phase as ended. In all cases, callback execution will indicate number of received data elements.
+  * @note  When the UART parity is enabled (PCE = 1), the received data contain
+  *        the parity bit (MSB position).
+  * @note  When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),
+  *        the received data is handled as a set of uint16_t. In this case, Size must indicate the number
+  *        of uint16_t available through pData.
+  * @note  When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),
+  *        address of user data buffer for storing data to be received, should be aligned on a half word frontier
+  *        (16 bits) (as received data will be handled by DMA from halfword frontier). Depending on compilation chain,
+  *        use of specific alignment compilation directives or pragmas might be required
+  *        to ensure proper alignment for pData.
+  * @param huart UART handle.
+  * @param pData Pointer to data buffer (uint8_t or uint16_t data elements).
+  * @param Size  Amount of data elements (uint8_t or uint16_t) to be received.
+  * @param timeout	Number of bit times of idle before receive timeout
+  * @retval HAL status
+  */
+HAL_StatusTypeDef
+   HAL_UARTEx_ReceiveToTimeout_DMA(
+      UART_HandleTypeDef 	*huart,
+	  uint8_t 		*pData,
+	  uint16_t 		Size,
+	  uint16_t		timeout )
+{
+   HAL_StatusTypeDef status;
+
+   /* Check that a Rx process is not already ongoing */
+   if (huart->RxState == HAL_UART_STATE_READY)
+   {
+      if ((pData == NULL) || (Size == 0U))
+      {
+	 return HAL_ERROR;
+      }
+
+      /* In case of 9bits/No Parity transfer, pData buffer provided as input parameter
+       should be aligned on a uint16_t frontier, as data copy from RDR will be
+       handled by DMA from a uint16_t frontier. */
+      if ((huart->Init.WordLength == UART_WORDLENGTH_9B) && (huart->Init.Parity == UART_PARITY_NONE))
+      {
+	 if ((((uint32_t)pData) & 1U) != 0U)
+	 {
+	    return  HAL_ERROR;
+	 }
+      }
+
+      /* Set Reception type to reception till Receive Time Out Event*/
+      huart->ReceptionType = HAL_UART_RECEPTION_TORTO;
+      huart->RxEventType = HAL_UART_RXEVENT_TC;
+
+      HAL_UART_ReceiverTimeout_Config( huart, timeout );
+
+      HAL_UART_EnableReceiverTimeout( huart );
+
+      status =  UART_Start_Receive_DMA(huart, pData, Size);
+
+      /* Check Rx process has been successfully started */
+      if (status == HAL_OK)
+      {
+	 if (huart->ReceptionType == HAL_UART_RECEPTION_TORTO)
+	 {
+	    __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_RTOF);
+	    ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_RTOIE);
+	 }
+	 else
+	 {
+	    /* In case of errors already pending when reception is started,
+           Interrupts may have already been raised and lead to reception abortion.
+           (Overrun error for instance).
+           In such case Reception Type has been reset to HAL_UART_RECEPTION_STANDARD. */
+	    status = HAL_ERROR;
+	 }
+      }
+
+      return status;
+   }
+   else
+   {
+      return HAL_BUSY;
+   }
+} // end of HAL_UARTEx_ReceiveToTimeout_DMA()
+
+//*********************************************************************
+void
+   display_message(
+      uint8_t		*data,
+      uint16_t		len )
+{
+
+   const uint8_t	COLS = 16;
+
+   uint16_t		remain;
+
+   uint16_t		cols;
+   uint16_t		row;
+
+   remain = len;
+   row = 0;
+
+   printf( "\r\n" );
+   printf( "display_message( 0x%8.8lx, 0x%4.4x )\r\n", (uint32_t) data, len );
+   while( remain )
+   {
+      cols = 0;
+      printf( "0x%4.4x  ", row );
+      while( (cols < COLS) && remain )
+      {
+	 if( cols != 0 )
+	 {
+	    printf( ", " );
+	 }
+	 printf( "%2.2x", *(data++) );
+	 remain--;
+	 cols++;
+      }
+      printf( "\r\n" );
+      row++;
+   }
+
+   return;
+} // end of display_message()
 
 /* USER CODE END 1 */

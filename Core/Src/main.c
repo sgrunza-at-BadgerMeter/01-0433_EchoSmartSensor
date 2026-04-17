@@ -146,8 +146,8 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_GPDMA1_Init();
-  MX_ICACHE_Init();
-  MX_DCACHE1_Init();
+  //MX_ICACHE_Init();
+  //MX_DCACHE1_Init();
   MX_FLASH_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();

@@ -57,6 +57,18 @@ void
    rs485_rx_continue(
       void );
 
+HAL_StatusTypeDef
+   HAL_UARTEx_ReceiveToTimeout_DMA(
+      UART_HandleTypeDef 		*huart,
+      uint8_t 			*pData,
+      uint16_t 			Size,
+      uint16_t			timeout );
+
+void
+   display_message(
+      uint8_t		*data,
+      uint16_t		len );
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
