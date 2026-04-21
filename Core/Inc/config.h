@@ -217,9 +217,16 @@ typedef struct SSP_STATUS_T
    bool			composite_wf;		///< 1 = use composite waveform, 0 = not composite wf
    bool			fix_gain_band;		///< 1 = use fixed gain band mid point
    bool			need_setup;		///< 1 = unit requires setup
+   bool			measure_range;		///< 1 = measure range, 0 = measure level
+   bool			settling_zone;
 
    uint16_t		levelLoop_value;	///< Level 4-20 mA
    uint16_t		auxLoop_value;		///< Aux 4-20 mA
+
+   int32_t		cpu_temperature;	///< sensor CPU temperature in Celcius
+
+   uint32_t		bus_msg_count;		///< number of RS485 messages received
+   uint32_t		slave_msg_count;	///< number of RS485 messages received for this device
 
 } SSP_STATUS_T;
 

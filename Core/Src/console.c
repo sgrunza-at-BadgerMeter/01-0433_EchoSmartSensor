@@ -86,6 +86,7 @@ const CMD_INFO_T        gCommands[] =
 	 { "reset",		cmd_reset,	(const char *)"Reset board"},
 	 { "rs485",		cmd_rs485,	(const char *)"RS-485 related commands"},
 	 { "swver",		cmd_swver,	(const char *)"Get software version information"},
+	 { "temp",		cmd_temp,	(const char *)"Get CPU temperature"},
 	 { "turbidity",		cmd_turbidity,	(const char *)"Get turbidity info"},
 	 { NULL, NULL, NULL }
 };
@@ -2390,4 +2391,23 @@ void cmd_accel( char     *msg )
    return;
 } // end of cmd_accel()
 
+/*
+ **********************************************************************
+ * @brief cmd_tmp() display CPU temperature
+ *
+ * @param msg - complete message from the debug console
+ *
+ * @return none
+ *
+ *
+ *
+ **********************************************************************
+ */
+void cmd_temp( char     *msg )
+{
+
+   printf( "STM32H523 temperature is %ld C\r\n", SSP_status.cpu_temperature );
+
+   return;
+} // end of cmd_temp()
 //end of file console.c

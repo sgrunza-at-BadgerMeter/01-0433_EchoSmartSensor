@@ -23,6 +23,8 @@
 #include "usart.h"
 #include "fifo.h"
 #include "crc.h"
+#include "ssp_com.h"
+#include "config.h"
 
 
 // Status flag to show status of the RS485 message processing task
@@ -154,7 +156,6 @@ void rs485_rx(ULONG thread_input)
 /*
  **********************************************************************
  * @brief process_rs485_msg() handles a single MODBUS / SSP message
- * system.
  *
  * No data checks have been done at this point.  The CRC should be
  * verified
@@ -198,14 +199,16 @@ void
 	       data.as32,		// ptr to data
 	       length );		// number of data bytes
 
-      printf( "RS485 msg received with address 0x%2.2x, fc = 0x%2.2x, payload = 0x%2.2x, length = 0x%4.4x, CRC = 0x%4.4x\r\n",
+#if 1
+      printf( "RS485 msg received with address 0x%2.2x, fc = 0x%2.2x, payload[0] = 0x%2.2x, length = 0x%4.4x, CRC = 0x%4.4x\r\n",
 	      msg->address,
 	      msg->fc,
-	      msg->payload,
+	      msg->payload[0],
 	      msg->length,
 	      crc_received );
 
-      //display_message( &(msg->address), msg->length );
+      display_message( &(msg->address), msg->length );
+#endif
 
       if( crc_received != (uint16_t)crc_calculated )
       {
@@ -213,7 +216,7 @@ void
       }
       else
       {
-	 //printf( " (ok)\r\n" );
+	 rs485_decode_command( msg );
       }
    }
 
@@ -659,5 +662,217 @@ void updateTurbLoop( uint16_t counts )
 
    return;
 } // end of updateTurbLoop()
+
+/*
+ **********************************************************************
+ * @brief rs485_decode_command() is passed a CRC valid message to process
+ *
+ * @param msg - pointer to a msg with a valid CRC
+ *
+ * @return none
+ **********************************************************************
+ */
+void rs485_decode_command( MODBUS_ADU_T *msg )
+{
+   SSP_status.bus_msg_count++;	// If the CRC fits, you must admit you received it
+   if( (msg->address == SSP_configuration.address) ||	// msg for this unit
+       (msg->address == 0) )				// broadcast msg
+   {
+      SSP_status.slave_msg_count++;
+
+      if( msg->address == 0 )
+      {
+	 // For broadcast messages only do a limited sub-set of commands
+	 switch( msg->fc )
+	 {
+	    case CMD_NETWORK_POLL:
+	       rs485_network_poll_cmd( msg );
+	       break;
+
+	    default:
+	       asm("nop");	// Do nothing
+	       break;
+	 } // end of switch(fc) for broadcast messages
+      }
+      else
+      {
+	 // Non-broadcast message
+	 switch( msg->fc )
+	 {
+	    case MODBUS_READ_COIL:	// function code 1
+	       rs485_readCoil( msg );
+	       break;
+
+	    case MODBUS_READ_HOLDING_REG:
+	       rs485_readHoldingReg( msg );
+	       break;
+	 }
+      }
+
+   }
+
+   return;
+} // end of rs485_decode_command()
+
+/*
+ **********************************************************************
+ * @brief rs485_network_poll_cmd()
+ *
+ * @param msg - pointer to a msg with a valid CRC
+ *
+ * @return none
+ **********************************************************************
+ */
+void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
+{
+   return;
+} // end of rs485_network_poll_cmd()
+
+/*
+ **********************************************************************
+ * @brief rs485_readHoldingReg()
+ *
+ * @param msg - pointer to a msg with a valid CRC
+ *
+ * @return none
+ **********************************************************************
+ */void rs485_readHoldingReg( MODBUS_ADU_T *msg )
+{
+   return;
+} // end of rs485_readHoldingReg()
+
+ /*
+  **********************************************************************
+  * @brief rs485_readCoil() returns one or more single bit coil values
+  * in a packed together byte format.  A single coil is returned as a
+  * left justified bit with seven trailing zeros.
+  *
+  * @param msg - pointer to a msg with a valid CRC
+  *
+  * @return none
+  **********************************************************************
+  */
+ void
+   rs485_readCoil(
+      MODBUS_ADU_T 	*msg )
+ {
+
+     uint16_t		firstReg;
+     uint16_t		numRegs;
+     uint8_t		numBytes;
+
+     uint8_t		coilNumber;
+     uint8_t		numCoils;
+
+     bool		singleCoil;
+     uint8_t		packedCoil;
+
+     firstReg = modbus_reg_first_reg( msg );
+     numRegs = modbus_number_of_regs( msg );
+
+     // Do some error checks
+     if( ( (numRegs + firstReg) > NBR_MB_COILS ) ||
+	   ( numRegs > MAX_MB_COILS_COMM) )
+     {
+	// coils requested beyond range
+	// build an error response
+	rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
+     }
+     else
+     {
+	rs485_prepare_tx_buf( msg->address, msg->fc );
+	numBytes = numRegs / 8;	// number of bytes returned
+	if( numRegs % 8 )
+	{
+	   // there is a remainder so add a byte
+	   numBytes++;
+	}
+	rs485_add_tx_byte( numBytes );
+
+	numCoils = 0;
+	coilNumber = firstReg;
+	packedCoil = 0;
+
+	while( numRegs-- > 0 )
+	{
+	   singleCoil = coil_commands[ coilNumber++ ].function( false, false );	// read command
+	   packedCoil = (packedCoil >> 1);
+	   if( singleCoil )
+	   {
+	      packedCoil |= 0x80;
+	   }
+
+	   if( ++numCoils >= 8 )
+	   {
+	      rs485_add_tx_byte( packedCoil );
+	      packedCoil = 0;
+	      numCoils = 0;
+	   }
+	}
+     }
+
+     // Actually send response
+     rs485_transmit_now();	// send the message
+
+     return;
+ } // end of rs485_readCoil()
+
+ /*
+   **********************************************************************
+   * @brief rs485_writeCoil() Write to a single coil
+   *
+   * @param msg - pointer to a msg with a valid CRC
+   *
+   * @return none
+   **********************************************************************
+   */
+ void
+    rs485_writeCoil(
+       MODBUS_ADU_T 	*msg )
+  {
+    uint16_t		firstReg;
+    bool		result;
+    bool		data;
+
+
+    firstReg = modbus_reg_first_reg( msg );
+
+    // Do some error checks
+    if( firstReg > NBR_MB_COILS )
+    {
+	// coils requested beyond range
+	// build an error response
+	rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
+    }
+    else
+    {
+       // perform the write
+       if( msg->payload[2] )	// fifth byte of message
+       {
+	  data = true;
+       }
+       else
+       {
+	  data = false;
+       }
+       result = coil_commands[ firstReg ].function( true, data );	// write command
+       if( result == data )
+       {
+	  // write was ok
+	  rs485_prepare_tx_buf( msg->address, msg->fc );
+	  rs485_add_tx_byte( msg->payload[0] );	// coil MSB
+	  rs485_add_tx_byte( msg->payload[1] );	// coil LSB
+	  rs485_add_tx_byte( msg->payload[2] );	// 0xFF or 0x00 from msg
+	  rs485_add_tx_byte( 0x00 );
+       }
+    }
+
+    // Actually send response
+    rs485_transmit_now();	// send the message
+
+    return;
+  } // end of rs485_writeCoil()
 
 // end of file system_io.c

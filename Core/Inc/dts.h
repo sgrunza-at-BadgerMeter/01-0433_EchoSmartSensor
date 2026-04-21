@@ -36,6 +36,9 @@ extern DTS_HandleTypeDef hdts;
 
 /* USER CODE BEGIN Private defines */
 
+// Temperature difference to cause a report
+#define TEMP_REPORT_DIFF	5
+
 /* USER CODE END Private defines */
 
 void MX_DTS_Init(void);

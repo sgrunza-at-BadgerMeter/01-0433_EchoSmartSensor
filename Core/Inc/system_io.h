@@ -129,6 +129,11 @@ void
 
 void updateLevelLoop( uint16_t	dacCounts );
 void updateTurbLoop( uint16_t	dacCounts );
+void rs485_readCoil( MODBUS_ADU_T *msg );
+void rs485_decode_command( MODBUS_ADU_T *msg );
+void rs485_network_poll_cmd( MODBUS_ADU_T *msg );
+void rs485_readHoldingReg( MODBUS_ADU_T *msg );
+void rs485_readCoil( MODBUS_ADU_T *msg );
 
 
 #endif /* INC_SYSTEM_IO_H_ */

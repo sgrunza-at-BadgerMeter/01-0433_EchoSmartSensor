@@ -23,6 +23,123 @@
 #include  <string.h>          	/* Standard String Library */
 #include  <math.h>		/* Math Routines */
 
+#include "main.h"
+#include "modbus.h"
+#include "config.h"
+
+//*********************************************************************
+uint16_t modbus_reg_first_reg( MODBUS_ADU_T *msg )
+{
+
+   uint16_t	reg16;
+
+   reg16 = msg->payload[0] << 8;
+   reg16 |= msg->payload[1];
+
+   return( reg16 );
+} // end of modbus_reg_first_reg()
+
+//*********************************************************************
+uint16_t modbus_number_of_regs( MODBUS_ADU_T *msg )
+{
+   uint16_t	reg16;
+
+   reg16 = msg->payload[2] << 8;
+   reg16 |= msg->payload[3];
+
+   return( reg16 );
+} // end of modbus_number_of_regs()
+
+//*********************************************************************
+bool MB_Coil001( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.auto_gain;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.auto_gain;
+
+      SSP_status.auto_gain = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+   }
+
+   return( retVal );
+} // end of MB_Coil001()
+
+//*********************************************************************
+bool MB_Coil002( bool isWrite, bool val )
+{
+
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.measure_range;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.measure_range;
+
+      SSP_status.measure_range = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+   }
+
+   return( retVal );
+} // end of MB_Coil002()
+
+//*********************************************************************
+bool MB_Coil003( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.settling_zone;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.settling_zone;
+
+      SSP_status.settling_zone = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+   }
+
+   return( retVal );
+} // end of MB_Coil003
+
+
 #if 0
 #include "HARDWARE.H"        	/* Hardware Port Definitions */
 #include "SS_PROBE.H"        	/* Main Program Definitions */
@@ -62,127 +179,8 @@ const char SSP_MODEL[5] = 		"SSP2 ";				// Must be 5 characters long
 #define MB_LISTEN_ONLY	0x02	/* Flag to be in listen only mode */
 
 
-/*
- **********************************************************************
- * @brief GetFirstReg() returns the first register from the given cmd
- *
- * @param msg - ptr to first byte of Modbus command
- *
- * @return 16-bit first register from the command
- **********************************************************************
- */
-uint16_t GetFirstReg( uint8_t *msg )
-{
-   uint16_t	reg;
 
-   reg = *(msg + 2) << 8;
-   reg |= *(msg + 3);
 
-   return( reg );
-} // end of GetFirstReg()
-
-/*
- **********************************************************************
- * @brief GetNbrRegs() returns register count from the given cmd
- *
- * @param msg - ptr to first byte of Modbus command
- *
- * @return 16-bit register count
- **********************************************************************
- */
-uint16_t GetNbrRegs( uint8_t *msg )
-{
-   uint16_t	reg;
-
-   reg = *(msg + 4) << 8;
-   reg |= *(msg + 5);
-
-   return( reg );
-} // end of GetNbrRegs()
-
-/*
- **********************************************************************
- * @brief MB_ReadCoil() decodes FC 1 Cmd
- *
- * @param msg - ptr to first byte of Modbus command
- *
- * @return none
- **********************************************************************
- */
-void MB_ReadCoil( uint8_t *msg )
-{
-
-   uint8_t	x;
-   uint8_t	nbrCoils;
-
-   uint8_t	bErr;		// Error Code for last operation
-   uint8_t	bFlags;		// ModBuf Flags
-
-   uint16_t	firstReg;
-   uint16_t	numberRegs;
-
-   if(bMbFlags & MB_LISTEN_ONLY)
-   {
-      // Listen only mode - no response
-      return;
-   }
-
-   firstReg = GetFirstReg( msg );
-   numberRegs = GetNbrRegs( msg );
-
-   bErr = 0x00;			// Reset Error Code (used to be global in GetFirstReg()
-
-   bMbFlags |= MB_READ_DATA;	// Set flag
-
-   if( firstReg > NBR_MB_COILS)
-   {
-      numberRegs = 0;	// Done to check for overflow of math in following test
-   }
-
-   // If user requested coils outside of scope
-   if( ( (wNbrRegs + wFirstReg) > NBR_MB_COILS ) ||
-	 (wNbrRegs > MAX_MB_COILS_COMM) )
-   {
-      GetTxBufMin( MODBUS_READ_COIL | 0x80 );			// Return response with error
-      SendByte((uchar)MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS);	// Return exception code 2
-   }
-   else
-   {
-      GetTxBufMin( MODBUS_READ_COIL );	// Return response
-      x = (uchar)(wNbrRegs/8);		// Number of bytes returned
-      if( (wNbrRegs%8) > 0 )
-      {
-	 ++x;		// If remainder then we have one more byte returned
-      }
-      SendByte(x);			// Return number of bytes sent
-      x = (uchar)wFirstReg;		// Start at first register
-      nbrCoils = 0;			// Clear counter
-      bCoil = 0;			// Clear accumulating register
-      while(wNbrRegs-- > 0)
-      {
-	 bCoil = bCoil >> 1;		// Shift left right for next coil status
-	 MB_COIL_MAP[x++]();		// Get Requested Coil status - update bCoil
-	 if(++nbrCoils >= 8)		// if 8 coils assembled in byte
-	 {
-	    SendByte(bCoil);		// Send status
-	    bCoil = 0;			// And clear for next round
-	    nbrCoils = 0;		// Reset counter
-	 }
-      }
-      if(nbrCoils)			// If still have some coil status collected but not sent
-      {
-	 while(nbrCoils++ < 8)		// for remaining bits in this byte
-	 {
-	    bCoil = bCoil >> 1;		// SHift to the right to fill byte
-	 }
-	 SendByte(bCoil);		// Send status
-      }
-   }
-   SendCS();             /* Compute CS and add to buffer */
-   SendDataNow();        /* Send it */
-
-   return;
-} // end of MB_ReadCoil()
 
 /*
  **********************************************************************
@@ -2009,83 +2007,8 @@ void MB_Reg40848(uchar bReg)		// User Specific Data Field 4 (8x2 array)
    }
 }
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil001                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Coil 001		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil001(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & AUTO_GAIN_ON)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// IF auto Gain on requested
-	 param.BitFlags |= AUTO_GAIN_ON;	// Set flag
-      else
-	 param.BitFlags &= ~(AUTO_GAIN_ON);	// Clear flag
-      SaveSettings();
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil002                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Coil 002		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil002(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & MEASURE_RANGE)		// If Range is selected
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// If Measure Range requested
-	 param.BitFlags |= MEASURE_RANGE;	/* Set Range */
-      else
-	 param.BitFlags &= ~(MEASURE_RANGE);	/* Set Level */
-      SaveSettings();
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil003                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Coil 003		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil003(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.SettlingZone)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// If settling zone requested
-	 param.SettlingZone = 1;
-      else
-	 param.SettlingZone = 0;
-      SaveSettings();
-   }
-}
 
 /*********************************************************************
  *                                                                    *

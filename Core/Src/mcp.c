@@ -20,11 +20,16 @@
 #include "turbidity.h"
 #include "wiper.h"
 #include "system_io.h"
+#include "dts.h"
 
 
 #define SRC_MCP_C_
 
 #include "mcp.h"
+
+// Defined in dtc.c
+extern DTS_HandleTypeDef hdts;
+
 
 
 /*
@@ -40,15 +45,15 @@ void
    mcp_thread_start(
       ULONG   		ulParameters )
 {
-   uint32_t	pingCount = 0;
+   HAL_StatusTypeDef		retVal;
 
    bool				configOK;
    MCP_SYS_STATE_E		state;
 
+   static int32_t		temperature = 0;
+
    // start with a delay to allow time for the other threads to init
    tx_thread_sleep( 1 * TX_TIMER_TICKS_PER_SECOND );
-
-
 
    // Load a configuration into the sensor
    configOK = cfg_verify_nvconfig( SSP_nvcfg_addr, sizeof(SSP_CONFIG_T) );
@@ -70,6 +75,22 @@ void
 
    state = INIT_STATE;
 
+   /* Start DTS peripheral */
+   retVal = HAL_DTS_Start( &hdts );
+   if( retVal != HAL_OK)
+   {
+     /* DTS start Error */
+     Error_Handler();
+   }
+
+   /* Get temperature in deg C */
+   retVal = HAL_DTS_GetTemperature( &hdts, &SSP_status.cpu_temperature );
+   if(retVal != HAL_OK)
+   {
+     /* DTS GetTemperature Error */
+     Error_Handler();
+   }
+
    // Initialize status structure
    SSP_status.auto_gain = false;
    SSP_status.composite_wf = 0;
@@ -82,6 +103,8 @@ void
    SSP_status.turbidityTimeout = 0;
    SSP_status.levelLoop_value = SSP_configuration.levelLoopMin;
    SSP_status.auxLoop_value = SSP_configuration.turbLoopMin;
+
+   temperature = 0;	// Should cause a temperature display event
 
    while( 1 )
    {
@@ -129,6 +152,20 @@ void
       {
 	 //printf( "mcp ping %ld\r\n", pingCount++ );
 	 tx_thread_sleep( 10 * TX_TIMER_TICKS_PER_SECOND );	// place-holder until final logic is in place
+      }
+
+      /* Get temperature in deg C */
+      retVal = HAL_DTS_GetTemperature( &hdts, &SSP_status.cpu_temperature );
+      if(retVal != HAL_OK)
+      {
+        /* DTS GetTemperature Error */
+        Error_Handler();
+      }
+
+      if( abs( SSP_status.cpu_temperature - temperature ) > TEMP_REPORT_DIFF )
+      {
+	 printf( "cpu temperature is %ld C\r\n", SSP_status.cpu_temperature );
+	 temperature = SSP_status.cpu_temperature;
       }
 
       tx_thread_sleep( 10 );	// place-holder until final logic is in place

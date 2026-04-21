@@ -91,11 +91,129 @@ typedef struct MODBUS_ADU_T
    uint16_t	length;		// number of bytes in the ADU
    uint8_t	address;	// address -- first byte of the message
    uint8_t	fc;		// function code
-   uint8_t	payload;	// variable length data plus error check
+   uint8_t	payload[2];	// variable length data plus error check
 } MODBUS_ADU_T;		// MODBUS Application Data Unit
 
 
+typedef bool (*COIL_CMD_T)(bool isWrite, bool val );
+
+typedef struct MB_COIL_CMD_T
+{
+   uint16_t	coilNumber;
+   COIL_CMD_T	function;
+} MB_COIL_CMD_T;
+
 /**** Function Prototypes ****/
+
+uint16_t modbus_reg_first_reg( MODBUS_ADU_T *msg );
+uint16_t modbus_number_of_regs( MODBUS_ADU_T *msg );
+
+bool MB_Coil001( bool isWrite, bool val );
+bool MB_Coil002( bool isWrite, bool val );
+bool MB_Coil003( bool isWrite, bool val );
+bool MB_Coil004( bool isWrite, bool val );
+bool MB_Coil005( bool isWrite, bool val );
+bool MB_Coil006( bool isWrite, bool val );
+bool MB_Coil007( bool isWrite, bool val );
+bool MB_Coil008( bool isWrite, bool val );
+bool MB_Coil009( bool isWrite, bool val );
+bool MB_Coil010( bool isWrite, bool val );
+
+bool MB_Coil011( bool isWrite, bool val );
+bool MB_Coil012( bool isWrite, bool val );
+bool MB_Coil013( bool isWrite, bool val );
+bool MB_Coil014( bool isWrite, bool val );
+bool MB_Coil015( bool isWrite, bool val );
+bool MB_Coil016( bool isWrite, bool val );
+bool MB_Coil017( bool isWrite, bool val );
+bool MB_Coil018( bool isWrite, bool val );
+bool MB_Coil019( bool isWrite, bool val );
+bool MB_Coil020( bool isWrite, bool val );
+
+bool MB_Coil021( bool isWrite, bool val );
+bool MB_Coil022( bool isWrite, bool val );
+bool MB_Coil023( bool isWrite, bool val );
+bool MB_Coil024( bool isWrite, bool val );
+bool MB_Coil025( bool isWrite, bool val );
+bool MB_Coil026( bool isWrite, bool val );
+bool MB_Coil027( bool isWrite, bool val );
+bool MB_Coil028( bool isWrite, bool val );
+bool MB_Coil029( bool isWrite, bool val );
+bool MB_Coil030( bool isWrite, bool val );
+
+bool MB_Coil031( bool isWrite, bool val );
+bool MB_Coil032( bool isWrite, bool val );
+bool MB_Coil033( bool isWrite, bool val );
+bool MB_Coil034( bool isWrite, bool val );
+bool MB_Coil035( bool isWrite, bool val );
+bool MB_Coil036( bool isWrite, bool val );
+bool MB_Coil037( bool isWrite, bool val );
+bool MB_Coil038( bool isWrite, bool val );
+bool MB_Coil039( bool isWrite, bool val );
+bool MB_Coil040( bool isWrite, bool val );
+
+bool MB_Coil041( bool isWrite, bool val );
+bool MB_Coil042( bool isWrite, bool val );
+bool MB_Coil043( bool isWrite, bool val );
+bool MB_Coil044( bool isWrite, bool val );
+bool MB_Coil045( bool isWrite, bool val );
+
+
+#ifndef _MODBUS_C_
+extern
+#endif
+MB_COIL_CMD_T	coil_commands[]
+#ifdef _MODBUS_C_
+= {
+	 { 0, NULL },		// no such coil
+	 { 1, MB_Coil001 },
+	 { 2, MB_Coil002 },
+	 { 3, MB_Coil003 },
+	 { 4, MB_Coil004 },
+	 { 5, MB_Coil005 },
+	 { 6, MB_Coil006 },
+	 { 7, MB_Coil007 },
+	 { 8, MB_Coil008 },
+	 { 9, MB_Coil009 },
+	 { 10, MB_Coil010 },
+	 { 11, MB_Coil011 },
+	 { 12, MB_Coil012 },
+	 { 13, MB_Coil013 },
+	 { 14, MB_Coil014 },
+	 { 15, MB_Coil015 },
+	 { 16, MB_Coil016 },
+	 { 17, MB_Coil017 },
+	 { 18, MB_Coil018 },
+	 { 19, MB_Coil019 },
+	 { 20, MB_Coil020 },
+	 { 21, MB_Coil021 },
+	 { 22, MB_Coil022 },
+	 { 23, MB_Coil023 },
+	 { 24, MB_Coil024 },
+	 { 25, MB_Coil025 },
+	 { 26, MB_Coil026 },
+	 { 27, MB_Coil027 },
+	 { 28, MB_Coil028 },
+	 { 29, MB_Coil029 },
+	 { 30, MB_Coil030 },
+	 { 31, MB_Coil031 },
+	 { 32, MB_Coil032 },
+	 { 33, MB_Coil033 },
+	 { 34, MB_Coil034 },
+	 { 35, MB_Coil035 },
+	 { 36, MB_Coil036 },
+	 { 37, MB_Coil037 },
+	 { 38, MB_Coil038 },
+	 { 39, MB_Coil039 },
+	 { 40, MB_Coil040 },
+	 { 41, MB_Coil041 },
+	 { 42, MB_Coil042 },
+	 { 43, MB_Coil043 },
+	 { 44, MB_Coil044 },
+	 { 45, MB_Coil045 }
+}
+#endif
+;
 
 void MB_ReadCoil(void);
 void MB_WriteCoil(void);
@@ -163,46 +281,7 @@ void MB_Reg40848(uint8_t bReg);		// User Specific Data - Field 4. (8x2 byte arra
 void MB_Reg50000( void );		// Sensor to Controller command to set 4-20mA loop Level
 void MB_Reg50001( void );		// Sensor to Controller command to set 4-20mA loop Aux
 
-void MB_Coil001(void);
-void MB_Coil002(void);
-void MB_Coil003(void);
-void MB_Coil004(void);
-void MB_Coil005(void);
-void MB_Coil006(void);
-void MB_Coil007(void);
-void MB_Coil008(void);
-void MB_Coil009(void);
-void MB_Coil010(void);
-void MB_Coil011(void);
-void MB_Coil012(void);
-void MB_Coil013(void);
-void MB_Coil014(void);
-void MB_Coil015(void);
-void MB_Coil016(void);
-void MB_Coil017(void);
-void MB_Coil018(void);
-void MB_Coil019(void);
-void MB_Coil020(void);
-void MB_Coil021(void);
-void MB_Coil022(void);
-void MB_Coil023(void);
-void MB_Coil024(void);
-void MB_Coil025(void);
-void MB_Coil026(void);
-void MB_Coil027(void);
-void MB_Coil028(void);
-void MB_Coil029(void);
-void MB_Coil030(void);
-void MB_Coil031(void);
-void MB_Coil032(void);
-void MB_Coil033(void);
-void MB_Coil034(void);
-void MB_Coil035(void);
-void MB_Coil036(void);
-void MB_Coil037(void);
-void MB_Coil038(void);
-void MB_Coil039(void);
-void MB_Coil040(void);
+
 
 #define NBR_MB_REGS		44	/* Number of Modbus Registers in SSP */
 #define MAX_MB_REG_COMM		15	/* Maximum number of consecutive registers IO can support */
@@ -211,117 +290,7 @@ void MB_Coil040(void);
 #define NBR_MB_COILS		40	/* Number of Modbus Coils in SSP */
 #define MAX_MB_COILS_COMM	80	/* Maximum number of consecutive coils IO can support */
 
-/*** Defined Memory Locations ***/
 
-
-/***** Variables visable to all ****/
-
-#ifdef _MODBUS_C_
-
-const void (*MB_REG_MAP[])(void) = {
-	(void *)MB_Reg40001,
-	(void *)MB_Reg40002,
-	(void *)MB_Reg40003,
-	(void *)MB_Reg40004,
-	(void *)MB_Reg40005,
-	(void *)MB_Reg40006,
-	(void *)MB_Reg40007,
-	(void *)MB_Reg40008,
-	(void *)MB_Reg40009,
-	(void *)MB_Reg40010,
-	(void *)MB_Reg40011,
-	(void *)MB_Reg40012,
-	(void *)MB_Reg40013,
-	(void *)MB_Reg40014,
-	(void *)MB_Reg40015,
-	(void *)MB_Reg40016,
-	(void *)MB_Reg40017,
-	(void *)MB_Reg40018,
-	(void *)MB_Reg40019,
-	(void *)MB_Reg40020,
-	(void *)MB_Reg40021,
-	(void *)MB_Reg40022,
-	(void *)MB_Reg40023,
-	(void *)MB_Reg40024,
-	(void *)MB_Reg40025,
-	(void *)MB_Reg40026,
-	(void *)MB_Reg40027,
-	(void *)MB_Reg40028,
-	(void *)MB_Reg40029,
-	(void *)MB_Reg40030,
-	(void *)MB_Reg40031,
-	(void *)MB_Reg40032,
-	(void *)MB_Reg40033,
-	(void *)MB_Reg40034,
-	(void *)MB_Reg40035,
-	(void *)MB_Reg40036,
-	(void *)MB_Reg40037,
-	(void *)MB_Reg40038,
-	(void *)MB_Reg40039,
-	(void *)MB_Reg40040,		/* Reserved for future use */
-	(void *)MB_Reg40041,		/* Reserved for future use */
-	(void *)MB_Reg40042,
-	(void *)MB_Reg40043,
-	(void *)MB_Reg40044,
-	(void *)MB_Reg40045,
-	};
-
-const void (*MB_COIL_MAP[])(void) = {
-	(void *)MB_Coil001,
-	(void *)MB_Coil002,
-	(void *)MB_Coil003,
-	(void *)MB_Coil004,
-	(void *)MB_Coil005,
-	(void *)MB_Coil006,
-	(void *)MB_Coil007,
-	(void *)MB_Coil008,
-	(void *)MB_Coil009,
-	(void *)MB_Coil010,
-	(void *)MB_Coil011,
-	(void *)MB_Coil012,
-	(void *)MB_Coil013,	/* Reserved for future use */
-	(void *)MB_Coil013,	/* Reserved for future use */
-	(void *)MB_Coil013,	/* Reserved for future use */
-	(void *)MB_Coil013,	/* Reserved for future use */
-	(void *)MB_Coil017,
-	(void *)MB_Coil018,
-	(void *)MB_Coil019,
-	(void *)MB_Coil020,
-	(void *)MB_Coil021,
-	(void *)MB_Coil022,
-	(void *)MB_Coil023,
-	(void *)MB_Coil024,
-	(void *)MB_Coil025,
-	(void *)MB_Coil026,
-	(void *)MB_Coil027,
-	(void *)MB_Coil028,
-	(void *)MB_Coil029,
-	(void *)MB_Coil030,
-	(void *)MB_Coil031,
-	(void *)MB_Coil032,
-	(void *)MB_Coil033,
-	(void *)MB_Coil034,
-	(void *)MB_Coil035,
-	(void *)MB_Coil036,
-	(void *)MB_Coil037,
-	(void *)MB_Coil038,
-	(void *)MB_Coil039,
-	(void *)MB_Coil040,	/* Reserved for future use */
-	};
-
-/* Com Vars */
-uint32_t wBusMsgCount;		/* Number of Bus Messages Received - All address */
-uint32_t wCRCCount;		/* Number of CRC Errors Detected */
-uint32_t wSlaveMsgCount;	/* Number of messages received for this slave */
-
-#else
-
-/* Com Vars */
-extern uint32_t wBusMsgCount;		/* Number of Bus Messages Received - All address */
-extern uint32_t wCRCCount;		/* Number of CRC Errors Detected */
-extern uint32_t wSlaveMsgCount;		/* Number of messages received for this slave */
-
-#endif // #ifdef _MODBUS_C_
 
 #endif /* INC_MODBUS_H_ */
 

@@ -62,6 +62,7 @@ void cmd_id( char * );
 void cmd_motor( char * );
 void cmd_turbidity( char * );
 void cmd_accel( char * );
+void cmd_temp( char * );
 
 
 // Define the message processing function
