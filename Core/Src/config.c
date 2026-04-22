@@ -57,64 +57,113 @@ static uint32_t GetBank(uint32_t Address);
  */
 void
    cfg_load_default(
-      SSP_CONFIG_T	*cfg )
+      SSP_CONFIG_T	*cfg,
+      CFG_LOAD_TYPE_E	type )
 {
 
-   cfg->address = 1;
-   cfg->eq_type = EQ_TYPE_PROBE;
-   cfg->fw_ver = 0;
-   cfg->hasTurbidity = 0;
-   cfg->hasReedSwitch = 0;
-   cfg->hasWiper = 0;
-   cfg->hw_id = 0;
-   cfg->serialNumber = 0;	// 16-bit value
-   cfg->range = RANGE_5_FT;
-   cfg->gainAdjust = 3;
-   cfg->uuid.first = HAL_GetUIDw0();
-   cfg->uuid.second = HAL_GetUIDw1();
-   cfg->uuid.third = HAL_GetUIDw2();
-   cfg->turb_0_ntu_cal = DFT_0_NTU_CAL_VALUE;
-   cfg->turb_50_ntu_cal = DFT_50_NTU_CAL_VALUE;
+   uint8_t		address;
 
-   cfg->tankDepth = DEFAULT_TANK_DEPTH;
-   cfg->dwellTime = 0;
-   cfg->minLevel = DEFAULT_MIN_LEVEL;
-   cfg->maxLevel = (DEFAULT_TANK_DEPTH * 110) / 100;
-   cfg->pingDelay = DEFAULT_PING_DELAY;
-   cfg->updateRate = DEFAULT_UPDATE_RATE;
-   cfg->smoothing = DEFAULT_SMOOTHING;
-   cfg->deltaSmoothing = 20;
-   cfg->sensitivity = DEFAULT_SENSITIVITY;
-   cfg->algorithm = DEFAULT_ALGORITHM;
-   cfg->candidates = DEFAULT_CANDIDATES;
-   cfg->wallZone = DEFAULT_WALL_ZONE;
-   cfg->settlingZone = DEFAULT_SETTLING_ZONE;
-   cfg->cellLimit = DEFAULT_CELL_LIMIT;
-   cfg->gateMin = DEFAULT_GATE_MIN;
-   cfg->gateMax = DEFAULT_GATE_MAX;
-   cfg->history = DEFAULT_HISTORY;
-   cfg->speedSound = DEFAULT_SOUND_SPEED;
-   cfg->gainIncrement = DEFAULT_GAIN_INCREMENT;
-   cfg->wallZoneAG = DEFAULT_WALLZONE_AG;
-   cfg->AGsetPoint = DEFAULT_AG_SETPOINT;
-   cfg->gainBand = DEFAULT_GAIN_BAND;
-   cfg->units = UNITS_FEET;
-   cfg->wiperDelay = DEFAULT_WIPER_DELAY;
-   cfg->setPoint4ma = 0;
-   cfg->setPoint20mA = DEFAULT_TANK_DEPTH;
-   cfg->echoLossAction = ECHO_LOSS_ACTION_CYCLE;
-   cfg->echoDelay = 60;		///< 60 minutes
-   cfg->levelLoopMin = I_LOOP_MIN;
-   cfg->levelLoopMax = I_LOOP_MAX;
-   cfg->minGain = -4095;
-   cfg->maxGain = 4095;
+   address = SSP_configuration.address;
 
-   //cfg->name[]
-   memcpy( cfg->name, DEFAULT_NAME, DEFAULT_NAME_LEN );
+   if( type == LOAD_ALL_SETTINGS )
+   {
+      cfg->address = 1;
+      cfg->eq_type = EQ_TYPE_PROBE;
+      cfg->fw_ver = 0;
+      cfg->hasTurbidity = 0;
+      cfg->hasReedSwitch = 0;
+      cfg->hasWiper = 0;
+      cfg->hw_id = 0;
+      cfg->serialNumber = 0;	// 16-bit value
+      cfg->range = RANGE_5_FT;
+      cfg->gainAdjust = 3;
+      cfg->uuid.first = HAL_GetUIDw0();
+      cfg->uuid.second = HAL_GetUIDw1();
+      cfg->uuid.third = HAL_GetUIDw2();
+      cfg->turb_0_ntu_cal = DFT_0_NTU_CAL_VALUE;
+      cfg->turb_50_ntu_cal = DFT_50_NTU_CAL_VALUE;
 
-   cfg->turbLoopMin = I_LOOP_MIN;
-   cfg->turbLoopMax = I_LOOP_MAX;
-   cfg->fixedGainBandMidPoint = 135;	///< Magic number
+      cfg->tankDepth = DEFAULT_TANK_DEPTH;
+      cfg->dwellTime = 0;
+      cfg->minLevel = DEFAULT_MIN_LEVEL;
+      cfg->maxLevel = (DEFAULT_TANK_DEPTH * 110) / 100;
+      cfg->pingDelay = DEFAULT_PING_DELAY;
+      cfg->updateRate = DEFAULT_UPDATE_RATE;
+      cfg->smoothing = DEFAULT_SMOOTHING;
+      cfg->deltaSmoothing = 20;
+      cfg->sensitivity = DEFAULT_SENSITIVITY;
+      cfg->algorithm = DEFAULT_ALGORITHM;
+      cfg->candidates = DEFAULT_CANDIDATES;
+      cfg->wallZone = DEFAULT_WALL_ZONE;
+      cfg->settlingZone = DEFAULT_SETTLING_ZONE;
+      cfg->cellLimit = DEFAULT_CELL_LIMIT;
+      cfg->gateMin = DEFAULT_GATE_MIN;
+      cfg->gateMax = DEFAULT_GATE_MAX;
+      cfg->history = DEFAULT_HISTORY;
+      cfg->speedSound = DEFAULT_SOUND_SPEED;
+      cfg->gainIncrement = DEFAULT_GAIN_INCREMENT;
+      cfg->wallZoneAG = DEFAULT_WALLZONE_AG;
+      cfg->AGsetPoint = DEFAULT_AG_SETPOINT;
+      cfg->gainBand = DEFAULT_GAIN_BAND;
+      cfg->units = UNITS_FEET;
+      cfg->wiperDelay = DEFAULT_WIPER_DELAY;
+      cfg->setPoint4ma = 0;
+      cfg->setPoint20mA = DEFAULT_TANK_DEPTH;
+      cfg->echoLossAction = ECHO_LOSS_ACTION_CYCLE;
+      cfg->echoDelay = 60;		///< 60 minutes
+      cfg->levelLoopMin = I_LOOP_MIN;
+      cfg->levelLoopMax = I_LOOP_MAX;
+      cfg->minGain = -4095;
+      cfg->maxGain = 4095;
+
+      //cfg->name[]
+      memcpy( cfg->name, DEFAULT_NAME, DEFAULT_NAME_LEN );
+
+      cfg->turbLoopMin = I_LOOP_MIN;
+      cfg->turbLoopMax = I_LOOP_MAX;
+      cfg->fixedGainBandMidPoint = 135;	///< Magic number
+
+   }
+   else if( type == LOAD_USER_SETTINGS )
+   {
+      cfg->address = address;	// address not changed
+      cfg->tankDepth = DEFAULT_TANK_DEPTH;
+      cfg->zeroAdjust = (TANK_DEPTH_INCR_FT / 2);
+      cfg->dwellTime = 0;
+      cfg->minLevel = DEFAULT_MIN_LEVEL;
+      cfg->pingDelay = 25;	// magic number
+      cfg->maxLevel = (DEFAULT_TANK_DEPTH * 110)/100;
+      cfg->speedSound = DEFAULT_SOUND_SPEED;
+      cfg->updateRate = DEFAULT_UPDATE_RATE;
+      cfg->smoothing = DEFAULT_SMOOTHING;
+      cfg->deltaSmoothing = 20;
+      cfg->sensitivity = DEFAULT_SENSITIVITY;
+      cfg->algorithm = DEFAULT_ALGORITHM;
+      cfg->candidates = DEFAULT_CANDIDATES;
+      cfg->wallZone = DEFAULT_WALL_ZONE;
+      cfg->settlingZone = DEFAULT_SETTLING_ZONE;
+      cfg->cellLimit = DEFAULT_CELL_LIMIT;
+      cfg->gateMin = DEFAULT_GATE_MIN;
+      cfg->gateMax = DEFAULT_GATE_MAX;
+      cfg->history = DEFAULT_HISTORY;
+      cfg->gainIncrement = DEFAULT_GAIN_INCREMENT;
+      cfg->wallZoneAG = DEFAULT_WALLZONE_AG;
+      cfg->AGsetPoint = DEFAULT_AG_SETPOINT;
+      cfg->gainBand = DEFAULT_GAIN_BAND;
+      cfg->units = UNITS_FEET;
+      cfg->wiperDelay = DEFAULT_WIPER_DELAY;
+      cfg->setPoint4ma = 0;
+      cfg->setPoint20mA = DEFAULT_TANK_DEPTH;
+      cfg->echoLossAction = ECHO_LOSS_ACTION_CYCLE;
+      cfg->echoDelay = 60;		///< 60 minutes
+      memset( cfg->name, 0, MAX_NAME_LEN );
+      memcpy( cfg->name, DEFAULT_NAME, DEFAULT_NAME_LEN );
+      cfg->fixedGainBandMidPoint = 135;	///< Magic number
+   }
+   else
+   {
+      printf( "Internal logic error in file %s at line %d\r\n", __FILE__, __LINE__ );
+   }
 
    return;
 } // end of cfg_load_default()

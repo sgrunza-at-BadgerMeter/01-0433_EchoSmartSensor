@@ -21,6 +21,15 @@
 // Defined in crc.c
 extern CRC_HandleTypeDef hcrc;
 
+
+typedef enum CFG_LOAD_TYPE_E
+{
+   LOAD_ALL_SETTINGS = 0x01,
+   LOAD_USER_SETTINGS,
+   LOAD_FROM_FLASH
+} CFG_LOAD_TYPE_E;
+
+
 /*
  * @brief Default values used if Flash config is invalid
  *
@@ -74,6 +83,37 @@ extern CRC_HandleTypeDef hcrc;
 #define DEFAULT_NAME_LEN		strlen(DEFAULT_NAME)
 #define MAX_NAME_LEN			24
 
+/******* Bit Definitions for bTrackStatus ****/
+#define LOOKING_RIGHT		0x01	/* Track is moving right */
+#define LOOKING_LEFT		0x02	/* Track is moving left */
+#define TRACK_STABLE		0x04	/* Track is stable */
+#define NO_REPORT_VALUE		0x20	/* No track value to report out of Init */
+#define	LOS_INDICATOR		0x40	/* Loss of Echo for more than Echo Delay Time - to be displayed on ESC and Modbus ONLY */
+#define SIGNAL_LOST		0x80	/* Track is lost */
+
+/******* Bit Definitions for bInitStatus *********/
+#define INIT_STAB_GAIN		0x01	/* Stablize Gain */
+#define INIT_STAB_TRACK		0x02	/* Stablize Track */
+#define INIT_STAB_GATES		0x04	/* Adjust Gates */
+#define INIT_DONE		0x08	/* Initilization done */
+#define INIT_NEED_SETUP		0x80	/* Unit needs set up - on used in reporting not in code */
+
+/******* Bit Definitions for bLoopStatus *******/
+#define LEVEL_LOOP_ACTIVE		0x01	/* Excite Voltage on Level Loop */
+#define TURBIDITY_LOOP_ACTIVE		0x02	/* Excite Voltage on TUrbidity Loop */
+#define LEVEL_DRIVER_ERROR		0x04	/* Drive Voltage to current loop out of range */
+#define TURBIDITY_DRIVER_ERROR		0x08	/* Drive Voltage to current loop out of range */
+#define ECHO_DELAY_TIMER_STARTED 	0x10	/* Loss of Signal Timer Started */
+
+/******* Bit Definitions for bProbeStatus *********/
+#define WAVEFORM_VALID		0x01	/* Waveform data not being updated - smoothed data ready */
+#define INIT_MODE		0x02	/* Probe in test mode */
+#define WIPER_DRIVER_ERROR	0x04	/* Wiper Motor Drive Failure */
+#define WIPER_CONNECT_ERROR	0x08	/* Wiper Motor Drive Not Connected Failure */
+#define LOS_ALARM		0x10	/* Loss of Signal for more than Echo Delay */
+#define TURB_LED_ERROR		0x20	/* Turbidity LED driver voltage */
+#define TURB_DRIVER_ERROR	0x40	/* Driver for Turbidity LED bad */
+#define LOW_POWER_M0DE		0x80	/* Sensor in stanby (Low Power) Mode */
 
 
 /**
@@ -122,6 +162,7 @@ typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
    uint16_t		turb_0_ntu_cal;		///< value of ADC for 0 NTU
 
    uint16_t		tankDepth;		///< tank depth in inches or cm
+   uint16_t		zeroAdjust;		///< inches or cm
    uint8_t		dwellTime;
    uint16_t		minLevel;		///< inches or cm
    uint16_t		maxLevel;		///< inches or cm
@@ -211,14 +252,30 @@ typedef struct SSP_STATUS_T
    uint8_t		turbidityTimeout;	///< set to HIGH_TURBIDITY_TIMEOUT when wiper started
    uint8_t		turbidityHoldOffTimer;	///< seconds to hold off starting wiper
    bool			wiperActive;		///< true if wiper is on
+   bool			wiperDriverError;	///< true if wiper has a problem
+   bool			wiperConnectionError;	///< true if there is a problem with wiper wiring
    //
    bool			auto_gain;		///< 1 = auto gain on, 0 = auto gain off
    bool			echo_loss;		///< 1 = echo loss, 0 = echo has not been lost
    bool			composite_wf;		///< 1 = use composite waveform, 0 = not composite wf
    bool			fix_gain_band;		///< 1 = use fixed gain band mid point
-   bool			need_setup;		///< 1 = unit requires setup
+
+   uint8_t		bInitStatus;		///< bit-mapped status, see INIT_DONE
+
    bool			measure_range;		///< 1 = measure range, 0 = measure level
    bool			settling_zone;
+   bool			force_level_4ma;	///< 1 = in calibration mode
+   bool			force_level_20ma;	///< 1 = in calibration mode
+   bool			force_turb_4ma;		///< 1 = in calibration mode
+   bool			force_turb_20ma;	///< 1 = in calibration mode
+   bool			enable_tx_pulse;	///< 1 = enable the TX pulse
+   bool			waveform_valid;		///< 1 = valid waveform
+   bool			enable_ping;		///< 1 = ping enabled
+   bool			los_alarm;
+
+   uint8_t		bTrackStatus;		///< Bit mapped field, including LOS_INDICATOR, etc
+   uint8_t		bLoopStatus;		///< Bit mapped field, including LEVEL_LOOP_ACTIVE, etc
+   uint8_t		bProbeStatus;		///< Bit mapped field, including TURB_LED_ERROR
 
    uint16_t		levelLoop_value;	///< Level 4-20 mA
    uint16_t		auxLoop_value;		///< Aux 4-20 mA
@@ -273,7 +330,8 @@ char *
 
 void
    cfg_load_default(
-      SSP_CONFIG_T	*cfg );
+      SSP_CONFIG_T	*cfg,
+      CFG_LOAD_TYPE_E	type );
 
 bool
    cfg_verify_nvconfig(

@@ -75,6 +75,7 @@ bool MB_Coil001( bool isWrite, bool val )
       {
 	 // TODO: Save configuration to flash
       }
+      retVal = true;	// write worked
    }
 
    return( retVal );
@@ -105,6 +106,7 @@ bool MB_Coil002( bool isWrite, bool val )
       {
 	 // TODO: Save configuration to flash
       }
+      retVal = true;	// write worked
    }
 
    return( retVal );
@@ -134,10 +136,744 @@ bool MB_Coil003( bool isWrite, bool val )
       {
 	 // TODO: Save configuration to flash
       }
+      retVal = true;	// write worked
    }
 
    return( retVal );
 } // end of MB_Coil003
+
+//*********************************************************************
+bool MB_Coil004( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.echo_loss;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.echo_loss;
+
+      SSP_status.echo_loss = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   return( retVal );
+} // end of MB_Coil004
+
+//*********************************************************************
+bool MB_Coil005( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.force_level_4ma;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.force_level_4ma;
+
+      SSP_status.force_level_4ma = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   return( retVal );
+} // end of MB_Coil005
+
+//*********************************************************************
+bool MB_Coil006( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.force_level_20ma;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.force_level_20ma;
+
+      SSP_status.force_level_20ma = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   return( retVal );
+} // end of MB_Coil006
+
+//*********************************************************************
+bool MB_Coil007( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.force_turb_4ma;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.force_turb_4ma;
+
+      SSP_status.force_turb_4ma = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   return( retVal );
+} // end of MB_Coil007
+
+//*********************************************************************
+bool MB_Coil008( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.force_turb_20ma;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.force_turb_20ma;
+
+      SSP_status.force_turb_20ma = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   return( retVal );
+} // end of MB_Coil008
+
+//*********************************************************************
+bool MB_Coil009( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.composite_wf;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.composite_wf;
+
+      SSP_status.composite_wf = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   return( retVal );
+} // end of MB_Coil009
+
+//*********************************************************************
+bool MB_Coil010( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.enable_tx_pulse;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.enable_tx_pulse;
+
+      SSP_status.enable_tx_pulse = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   return( retVal );
+} // end of MB_Coil010
+
+//*********************************************************************
+bool MB_Coil011( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		tmp;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.enable_ping;
+   }
+   else
+   {
+      // This is a write command
+      tmp = SSP_status.enable_ping;
+
+      SSP_status.enable_ping = val;
+
+      retVal = val;
+
+      if( tmp != val )
+      {
+	 SSP_status.waveform_valid = false;
+
+	 // TODO: Save configuration to flash
+      }
+      retVal = true;	// write worked
+   }
+
+   // TODO: Figure out what the Ping Timer / Timeout logic did originally
+
+   return( retVal );
+} // end of MB_Coil011
+
+//*********************************************************************
+bool MB_Coil012( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = false;	// This is a LowPowerMode command -- this system does not support lowPower
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// write failed, this is read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil012
+
+//*********************************************************************
+bool MB_Coil017( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_configuration.hasTurbidity;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil017
+
+//*********************************************************************
+bool MB_Coil018( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_configuration.hasWiper;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil018
+
+//*********************************************************************
+bool MB_Coil019( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.wiperDriverError;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil019
+
+//*********************************************************************
+bool MB_Coil020( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.wiperConnectionError;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil020
+
+//*********************************************************************
+bool MB_Coil021( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = false;
+      if( SSP_status.bTrackStatus & LOS_INDICATOR )
+      {
+	 retVal = true;
+      }
+
+      if( SSP_status.los_alarm )
+      {
+	 retVal = true;
+      }
+
+      if( (SSP_status.bTrackStatus & NO_REPORT_VALUE) &&
+          (SSP_status.bInitStatus & INIT_DONE) )
+      {
+	 retVal = true;
+      }
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil021
+
+//*********************************************************************
+bool MB_Coil022( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bInitStatus & INIT_STAB_GAIN) ? true: false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil022
+
+//*********************************************************************
+bool MB_Coil023( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bInitStatus & INIT_STAB_TRACK) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil023
+
+//*********************************************************************
+bool MB_Coil024( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bInitStatus & INIT_STAB_GATES) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil024
+
+//*********************************************************************
+bool MB_Coil025( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bInitStatus & INIT_DONE) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil025
+
+//*********************************************************************
+bool MB_Coil026( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bInitStatus & INIT_NEED_SETUP) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil026
+
+//*********************************************************************
+bool MB_Coil027( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bLoopStatus & LEVEL_LOOP_ACTIVE) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil027
+
+//*********************************************************************
+bool MB_Coil028( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bLoopStatus & TURBIDITY_LOOP_ACTIVE) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil028
+
+//*********************************************************************
+bool MB_Coil029( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bLoopStatus & LEVEL_DRIVER_ERROR) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil029
+
+//*********************************************************************
+bool MB_Coil030( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bLoopStatus & TURBIDITY_DRIVER_ERROR) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil030
+
+//*********************************************************************
+bool MB_Coil031( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bLoopStatus & ECHO_DELAY_TIMER_STARTED) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil031
+
+//*********************************************************************
+bool MB_Coil032( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = SSP_status.waveform_valid;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;	// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil032
+
+//*********************************************************************
+bool MB_Coil033( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = true;	// read-only
+      // Load the configuration structure with default values
+      cfg_load_default( &SSP_configuration, LOAD_USER_SETTINGS );
+   }
+
+   return( retVal );
+} // end of MB_Coil033
+
+//*********************************************************************
+bool MB_Coil034( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		configOK;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = true;
+
+      // Load the configuration structure with Flash values
+
+      // Load a configuration into the sensor
+      configOK = cfg_verify_nvconfig( SSP_nvcfg_addr, sizeof(SSP_CONFIG_T) );
+      if( configOK )
+      {
+         memcpy( &SSP_configuration, SSP_nvcfg_addr, sizeof( SSP_CONFIG_T) );
+      }
+      else
+      {
+         cfg_load_default( &SSP_configuration, LOAD_ALL_SETTINGS );
+         printf( "Flash-based configuration is not valid, using defaults\r\n" );
+      }
+
+      printf( "Device address is 0x%2.2x\r\n", SSP_configuration.address );
+   }
+
+   return( retVal );
+} // end of MB_Coil034
+
+//*********************************************************************
+bool MB_Coil035( bool isWrite, bool val )
+{
+   bool		retVal;
+   bool		writeOk;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = true;
+
+      // Save the configuration structure to Flash
+      writeOk = cfg_write_nvconfig(
+		  &SSP_configuration,		// in RAM
+		  SSP_nvcfg_addr,		// in Flash
+		  sizeof( SSP_CONFIG_T ) );	// size in bytes
+      if( writeOk )
+      {
+	 printf( "Configuration written to Flash\r\n" );
+      }
+      else
+      {
+	 printf( "Write to Flash failed in %s at %d\r\n", __FILE__, __LINE__ );
+      }
+
+      printf( "Device address is 0x%2.2x\r\n", SSP_configuration.address );
+   }
+
+   return( retVal );
+} // end of MB_Coil035
+
+//*********************************************************************
+bool MB_Coil036( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = true;
+      NVIC_SystemReset();
+   }
+
+   return( retVal );
+} // end of MB_Coil036
+
+//*********************************************************************
+bool MB_Coil037( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bProbeStatus & TURB_LED_ERROR) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;		// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil037
+
+//*********************************************************************
+bool MB_Coil038( bool isWrite, bool val )
+{
+   bool		retVal;
+
+   if( !isWrite )
+   {
+      // This is a read command
+      retVal = (SSP_status.bProbeStatus & TURB_DRIVER_ERROR) ? true : false;
+   }
+   else
+   {
+      // This is a write command
+      retVal = false;		// read-only
+   }
+
+   return( retVal );
+} // end of MB_Coil038
 
 
 #if 0
@@ -2010,244 +2746,16 @@ void MB_Reg40848(uchar bReg)		// User Specific Data Field 4 (8x2 array)
 
 
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil004                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Coil 004		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil004(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & ECHO_LOSS_ON)	// If Echo Loss ON
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// If Echo Loss requested
-	 param.BitFlags |= ECHO_LOSS_ON;	// Set flag
-      else
-	 param.BitFlags &= ~(ECHO_LOSS_ON);	// Clear flag
-      SaveSettings();
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil005                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 005		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil005(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopCal & FORCE_LEVEL_LOOP_4MA_CAL)	// If in Calibration mode
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// If Force Level requested
-	 bLoopCal |= FORCE_LEVEL_LOOP_4MA_CAL;	// Set flag
-      else
-	 bLoopCal &= ~(FORCE_LEVEL_LOOP_4MA_CAL);
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil006                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 006		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil006(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopCal & FORCE_LEVEL_LOOP_20MA_CAL)	// If in Calibration mode
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// If Force Level requested
-	 bLoopCal |= FORCE_LEVEL_LOOP_20MA_CAL;	// Set flag
-      else
-	 bLoopCal &= ~(FORCE_LEVEL_LOOP_20MA_CAL);
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil007                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 007		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil007(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopCal & FORCE_TURBIDITY_LOOP_4MA_CAL)	// If in Calibration mode
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// If Force Level requested
-	 bLoopCal |= FORCE_TURBIDITY_LOOP_4MA_CAL;	// Set flag
-      else
-	 bLoopCal &= ~(FORCE_TURBIDITY_LOOP_4MA_CAL);
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil008                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 008		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil008(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopCal & FORCE_TURBIDITY_LOOP_20MA_CAL)	// If in Calibration mode
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// If Force Level requested
-	 bLoopCal |= FORCE_TURBIDITY_LOOP_20MA_CAL;	// Set flag
-      else
-	 bLoopCal &= ~(FORCE_TURBIDITY_LOOP_20MA_CAL);
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil009                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 009		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil009(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bitEnableComposite)		// If we build composite waveform
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// IF composite on requested
-      {
-	 bEchoControl |= EC_COMPOSITE_WF;
-	 param.BitFlags |= COMPOSITE_WF;	// Set flag
-      }
-      else
-      {
-	 bEchoControl &= ~(EC_COMPOSITE_WF);
-	 param.BitFlags &= ~(COMPOSITE_WF);	// Set flag
-      }
-      SaveSettings();
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil010                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 010		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil010(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(enableTxPulse)		// If enabled
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// IF enable TX Pulse is requested
-	 enableTxPulse = 1;
-      else
-	 enableTxPulse = 0;
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil011                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 011		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil011(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bitEnablePing)		// If we enable ping
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if((bitEnablePing == 0) && (*pRegData))	/* If echo control was off and now we are turning it on */
-	 bProbeStatus &= ~(WAVEFORM_VALID);	// Clear flag to force a new capture
-      if(*pRegData)	// IF enable ping requested
-	 bEchoControl |= EC_ENABLE_PING;
-      else
-	 bEchoControl &= ~(EC_ENABLE_PING);
-      if(bitEnablePing)			/* If Ping is enabled */
-	 EnablePinTimeOutSec = 0;	/* Disable Timer */
-      else					/* If Ping is disabled */
-	 EnablePinTimeOutSec = ENABLE_PING_TIMEOUT;	/* Reset Timer */
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil012                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 012		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil012(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(LowPowerMode == 0)
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      if(*pRegData)	// IF HIGH POWER requested
-	 LowPowerMode = 0;
-      else
-	 LowPowerMode = 1;
-   }
-}
+
+
 
 /*********************************************************************
  *                                                                    *
@@ -2315,470 +2823,29 @@ void MB_Coil016(void)
 }
 #endif
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil017                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 017		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil017(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & TURBIDITY_INSTALLED)	// If Enabled
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil018                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 018		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil018(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & WIPER_INSTALLED)	// If Enabled
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil019                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 019		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil019(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bProbeStatus & WIPER_DRIVER_ERROR)
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil020                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 020		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil020(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bProbeStatus & WIPER_CONNECT_ERROR)
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil021                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 021		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil021(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if((bProbeStatus & LOS_ALARM) || (bTrackStatus & LOS_INDICATOR) || ((bTrackStatus & NO_REPORT_VALUE) && (bInitStatus & INIT_DONE)))	// If LOS
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil022                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 022		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil022(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bInitStatus & INIT_STAB_GAIN)	// If initilizing - stablizing gain
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil023                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 023		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil023(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bInitStatus & INIT_STAB_TRACK)	// If initilizing - stablizing track
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil024                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 024		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil024(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bInitStatus & INIT_STAB_GATES)	// If initilizing - stablizing gates
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil025                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 025		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil025(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bInitStatus & INIT_DONE)	// If initilizing done
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil026                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 026		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil026(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bInitStatus & INIT_NEED_SETUP)	// If need setup
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil027                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 027		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil027(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopStatus & LEVEL_LOOP_ACTIVE)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil028                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 028		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil028(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopStatus & TURBIDITY_LOOP_ACTIVE)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil029                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 029		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil029(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopStatus & LEVEL_DRIVER_ERROR)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil030                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 030		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil030(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopStatus & TURBIDITY_DRIVER_ERROR)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil031                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 031		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil031(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bLoopStatus & ECHO_DELAY_TIMER_STARTED)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil032                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 032		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil032(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bProbeStatus & WAVEFORM_VALID)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil033                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 033		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil033(void)
-{
-   if((bMbFlags & MB_READ_DATA) == 0)	// If Write - read always returns 0
-   {
-      LoadDefaultSettings(LOAD_USER_SETTINGS);
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil034                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 034		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil034(void)
-{
-   if((bMbFlags & MB_READ_DATA) == 0)	// If Write - read always returns 0
-   {
-      ReadSettings(1);
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil035                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 035		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil035(void)
-{
-   if((bMbFlags & MB_READ_DATA) == 0)	// If Write - read always returns 0
-   {
-      SaveSettings();
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil036                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 036		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil036(void)
-{
-   if((bMbFlags & MB_READ_DATA) == 0)	// If Write - read always returns 0
-   {
-      warmBoot = TRUE;
-      bSoftwareReset = 1;	// Indicate that this is a software reset
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil037                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 037		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil037(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bProbeStatus & TURB_LED_ERROR)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Coil038                           				*
- *    Change Info:   07/23/08                                         *
- *    Description:   Process request for Coil 038		               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Coil038(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(bProbeStatus & TURB_DRIVER_ERROR)	// If On
-	 bCoil |= 0x80;			// Show coil as ON
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-   }
-}
+
+
 
 #if(1)	/* To save code space unused coils are mapped in MB_COIL_MAP[] to Coil040() which is also unused */
 /*********************************************************************

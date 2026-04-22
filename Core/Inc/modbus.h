@@ -121,10 +121,10 @@ bool MB_Coil010( bool isWrite, bool val );
 
 bool MB_Coil011( bool isWrite, bool val );
 bool MB_Coil012( bool isWrite, bool val );
-bool MB_Coil013( bool isWrite, bool val );
-bool MB_Coil014( bool isWrite, bool val );
-bool MB_Coil015( bool isWrite, bool val );
-bool MB_Coil016( bool isWrite, bool val );
+//bool MB_Coil013( bool isWrite, bool val );
+//bool MB_Coil014( bool isWrite, bool val );
+//bool MB_Coil015( bool isWrite, bool val );
+//bool MB_Coil016( bool isWrite, bool val );
 bool MB_Coil017( bool isWrite, bool val );
 bool MB_Coil018( bool isWrite, bool val );
 bool MB_Coil019( bool isWrite, bool val );
@@ -165,7 +165,6 @@ extern
 MB_COIL_CMD_T	coil_commands[]
 #ifdef _MODBUS_C_
 = {
-	 { 0, NULL },		// no such coil
 	 { 1, MB_Coil001 },
 	 { 2, MB_Coil002 },
 	 { 3, MB_Coil003 },
@@ -178,10 +177,6 @@ MB_COIL_CMD_T	coil_commands[]
 	 { 10, MB_Coil010 },
 	 { 11, MB_Coil011 },
 	 { 12, MB_Coil012 },
-	 { 13, MB_Coil013 },
-	 { 14, MB_Coil014 },
-	 { 15, MB_Coil015 },
-	 { 16, MB_Coil016 },
 	 { 17, MB_Coil017 },
 	 { 18, MB_Coil018 },
 	 { 19, MB_Coil019 },
@@ -203,14 +198,7 @@ MB_COIL_CMD_T	coil_commands[]
 	 { 35, MB_Coil035 },
 	 { 36, MB_Coil036 },
 	 { 37, MB_Coil037 },
-	 { 38, MB_Coil038 },
-	 { 39, MB_Coil039 },
-	 { 40, MB_Coil040 },
-	 { 41, MB_Coil041 },
-	 { 42, MB_Coil042 },
-	 { 43, MB_Coil043 },
-	 { 44, MB_Coil044 },
-	 { 45, MB_Coil045 }
+	 { 38, MB_Coil038 }
 }
 #endif
 ;

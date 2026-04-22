@@ -63,7 +63,7 @@ void
    }
    else
    {
-      cfg_load_default( &SSP_configuration );
+      cfg_load_default( &SSP_configuration, LOAD_ALL_SETTINGS );
       printf( "Flash-based configuration is not valid, using defaults\r\n" );
    }
 
@@ -96,7 +96,7 @@ void
    SSP_status.composite_wf = 0;
    SSP_status.echo_loss = false;
    SSP_status.fix_gain_band = false;
-   SSP_status.need_setup = true;
+   SSP_status.bInitStatus = INIT_NEED_SETUP;
    SSP_status.ntu = 0;
    SSP_status.previousNTU = 0;
    SSP_status.turbidityHoldOffTimer = 0;

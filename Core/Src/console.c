@@ -135,7 +135,7 @@ void
    fflush( stdout );
 
    // Load the configuration structure
-   cfg_load_default( &SSP_configuration );
+   cfg_load_default( &SSP_configuration, LOAD_FROM_FLASH );
 
    // Start the asynchronous reception process by receiving one character
    console_receive_char();
@@ -841,7 +841,7 @@ void cmd_configure( char     *msg )
 	 cmpVal = strncmp( c, "default", 7 );
 	 if( cmpVal == 0 )
 	 {
-	    cfg_load_default( &SSP_configuration );
+	    cfg_load_default( &SSP_configuration, LOAD_USER_SETTINGS );
 	 }
 	 else
 	 {
