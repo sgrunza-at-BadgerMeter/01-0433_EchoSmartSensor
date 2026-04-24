@@ -1117,7 +1117,7 @@ void
        // Do some error checks
        if( m->regAddr <= WAVEFORM_MB_REG_STOP )
        {
-	  // Simple error checks are look ok
+	  // Simple error checks look ok
 	  rs485_prepare_tx_buf( msg->address, msg->fc );
 	  rs485_add_tx_byte( m->regAddr >> 8 );
 	  rs485_add_tx_byte( m->regAddr & 0x00FF );
@@ -1148,8 +1148,17 @@ void
 	     }
 	  }
 
-	  rs485_add_tx_byte( wrResult >> 8 );
-	  rs485_add_tx_byte( wrResult & 0x00FF );
+	  if( wrResult != m->regData )
+	  {
+	     // Something failed in the write function
+	     rs485_prepare_tx_buf( m->address, m->fc | 0x80 );
+	     rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_VALUE ); // code 3
+	  }
+	  else
+	  {
+	     rs485_add_tx_byte( wrResult >> 8 );
+	     rs485_add_tx_byte( wrResult & 0x00FF );
+	  }
        }
        else
        {

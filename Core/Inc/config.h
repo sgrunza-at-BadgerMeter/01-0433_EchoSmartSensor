@@ -285,6 +285,8 @@ typedef struct SSP_STATUS_T
    uint32_t		bus_msg_count;		///< number of RS485 messages received
    uint32_t		slave_msg_count;	///< number of RS485 messages received for this device
 
+   float		fTrackMeasurement;	///< Current Track Measurement
+
 } SSP_STATUS_T;
 
 

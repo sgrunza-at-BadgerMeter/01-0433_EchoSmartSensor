@@ -252,61 +252,61 @@ void MB_WriteMultReg(void);
 void MB_Diag(void);
 void MB_SlaveID(void);
 
-uint16_t MB_Reg40001( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40002( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40003( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40004( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40005( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40006( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40007( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40008( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40009( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40010( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40001( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40002( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40003( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40004( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40005( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40006( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40007( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40008( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40009( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40010( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg40011( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40012( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40013( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40014( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40015( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40016( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40017( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40018( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40019( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40020( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40011( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40012( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40013( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40014( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40015( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40016( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40017( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40018( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40019( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40020( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg40021( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40022( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40023( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40024( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40025( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40026( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40027( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40028( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40029( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40030( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40021( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40022( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40023( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40024( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40025( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40026( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40027( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40028( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40029( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40030( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg40031( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40032( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40033( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40034( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40035( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40036( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40037( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40038( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40031( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40032( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40033( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40034( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40035( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40036( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40037( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40038( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg40042( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40043( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40044( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg40045( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40042( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40043( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40044( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40045( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg40100( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40100( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg40112( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40112( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg40200( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg40200( uint16_t reg, bool isWrite, uint16_t val );
 
-uint16_t MB_Reg50000( uint16_t reg, bool isWrite, uint16_t val );
-uint16_t MB_Reg50001( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg50000( uint16_t reg, bool isWrite, uint16_t val );
+int16_t MB_Reg50001( uint16_t reg, bool isWrite, uint16_t val );
 
 #ifndef _MODBUS_C_
 extern

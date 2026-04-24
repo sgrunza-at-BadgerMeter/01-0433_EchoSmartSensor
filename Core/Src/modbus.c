@@ -875,8 +875,105 @@ bool MB_Coil038( bool isWrite, bool val )
    return( retVal );
 } // end of MB_Coil038
 
+//*********************************************************************
+//* Calculated interface position
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40001(
+      uint16_t 		reg,
+      bool 		isWrite,
+      uint16_t 		val )
+{
+   int16_t		value;
+   float		fVal;
 
+   if( !isWrite )
+   {
+      switch( SSP_configuration.units )
+      {
+	 // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
+	 case UNITS_INCH:
+	    fVal = (fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
+	    break;
+	 case UNITS_METER:
+	    fVal = (fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
+	    break;
+	 case UNITS_CM:
+	    fVal = (fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
+	    break;
+	 case UNITS_FEET:
+	 default:
+	    fVal = (fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
+	    break;
+      }
+      value = (int16_t) fVal;		// Get integer portion
+      if( modf(fVal,&fVal) >= 0.50 )
+      {
+	 ++value;
+      }
+   }
+   else
+   {
+      bMbError = 0x01;		// Error Code 1 - Write not allowed
+      pRegData += 2;		// Advance pointer
+   }
+} // end of MB_Reg40001()
 
+//*********************************************************************
+//* Units
+//*
+//* The Units value determines what units the UUI, USI, USUI, and
+//* BUI number (see section 4.4 of the EchoSmart Modbus Manual for
+//* definitions of each) will represent
+//*
+//* 0 = feet
+//* 1 = inches
+//* 2 = meters
+//* 3 = cm
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40002(
+      uint16_t 		reg,
+      bool 		isWrite,
+      uint16_t 		val )
+{
+   int16_t		value;
+   float		fVal;
+
+   if( !isWrite )
+   {
+      switch( SSP_configuration.units )
+      {
+	 // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
+	 case UNITS_INCH:
+	    fVal = (fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
+	    break;
+	 case UNITS_METER:
+	    fVal = (fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
+	    break;
+	 case UNITS_CM:
+	    fVal = (fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
+	    break;
+	 case UNITS_FEET:
+	 default:
+	    fVal = (fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
+	    break;
+      }
+      value = (int16_t) fVal;		// Get integer portion
+      if( modf(fVal,&fVal) >= 0.50 )
+      {
+	 ++value;
+      }
+   }
+   else
+   {
+      bMbError = 0x01;		// Error Code 1 - Write not allowed
+      pRegData += 2;		// Advance pointer
+   }
+} // end of MB_Reg40002
 
 #if 0
 /*********************************************************************
@@ -971,48 +1068,6 @@ void MB_SlaveID(void)
    SendDataNow();        /* Send it */
 }
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40001                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40001               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40001(void)
-{
-   X_INT	iVal;
-   X_FLOAT	fVal;
-
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      switch(param.Units)
-      {		/* Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches */
-	 case UNITS_INCH:
-	    fVal = (fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
-	    break;
-	 case UNITS_METER:
-	    fVal = (fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
-	    break;
-	 case UNITS_CM:
-	    fVal = (fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
-	    break;
-	 case UNITS_FEET:
-	 default:
-	    fVal = (fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
-	    break;
-      }
-      iVal = fVal;	// Get integer portion
-      if(modf(fVal,&fVal) >= 0.50) ++iVal;	// Round value
-      SendWord(iVal);
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
 
 
 /*********************************************************************
