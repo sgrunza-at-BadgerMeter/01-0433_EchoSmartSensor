@@ -767,6 +767,8 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
      bool		singleCoil;
      uint8_t		packedCoil;
 
+     COIL_CMD_T 	coilFunction;
+
      firstReg = modbus_reg_first_reg( msg );
      numRegs = modbus_number_of_regs( msg );
 
@@ -796,7 +798,18 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
 
 	while( numRegs-- > 0 )
 	{
-	   singleCoil = coil_commands[ coilNumber++ ].function( false, false );	// read command
+	   coilFunction = rs485_find_coil_function( coilNumber++ );
+	   if( coilFunction != NULL )
+	   {
+	      // There is a function for this coil
+	      singleCoil = coil_commands[ coilNumber++ ].function( false, false );	// read command
+	   }
+	   else
+	   {
+	      // No function associated with this coil, return 0
+	      singleCoil = 0;
+	   }
+
 	   packedCoil = (packedCoil >> 1);
 	   if( singleCoil )
 	   {
@@ -809,7 +822,7 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
 	      packedCoil = 0;
 	      numCoils = 0;
 	   }
-	}
+	} // end of while()
      }
 
      // Actually send response
@@ -831,15 +844,17 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
     rs485_writeCoil(
        MODBUS_ADU_T 	*msg )
   {
-    uint16_t		firstReg;
+    uint16_t		coilNumber;
     bool		result;
     bool		data;
 
+    COIL_CMD_T		coilFunction;
 
-    firstReg = modbus_reg_first_reg( msg );
+
+    coilNumber = modbus_reg_first_reg( msg );
 
     // Do some error checks
-    if( firstReg > NBR_MB_COILS )
+    if( coilNumber > NBR_MB_COILS )
     {
 	// coils requested beyond range
 	// build an error response
@@ -857,7 +872,19 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
        {
 	  data = false;
        }
-       result = coil_commands[ firstReg ].function( true, data );	// write command
+
+       coilFunction = rs485_find_coil_function( coilNumber );
+       if( coilFunction != NULL )
+       {
+	  // There is a function for this coil
+	  result = coil_commands[ coilNumber ].function( true, data );	// write command
+       }
+       else
+       {
+	  // No function associated with this coil, return something to create an error msg
+	  result = !data;
+       }
+
        if( result == data )
        {
 	  // write was ok
@@ -867,6 +894,12 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
 	  rs485_add_tx_byte( msg->payload[2] );	// 0xFF or 0x00 from msg
 	  rs485_add_tx_byte( 0x00 );
        }
+       else
+       {
+	  // build an error response
+	  rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	  rs485_add_tx_byte( MBUS_RESPONSE_SERVICE_DEVICE_FAILURE ); // code 4
+       }
     }
 
     // Actually send response
@@ -874,5 +907,376 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
 
     return;
   } // end of rs485_writeCoil()
+
+//*********************************************************************
+COIL_CMD_T
+   rs485_find_coil_function(
+      uint16_t		coilNum )
+{
+   int16_t			index;
+   COIL_CMD_T			func;
+   static uint16_t		lastIndex = 0;
+
+   if( lastIndex == 0 )
+   {
+      // Need to find the last index
+      while( coil_commands[lastIndex].coilNumber != MB_INVALID_COIL )
+      {
+	 lastIndex++;
+      }
+   }
+
+   if( coilNum > lastIndex )
+   {
+      // coilNum is large so probably near the end of list
+      index = lastIndex;
+   }
+   else
+   {
+      // start at the given coilNum as an index and look backwards
+      index = coilNum;
+   }
+
+   while( coil_commands[index].coilNumber != coilNum )
+   {
+      index--;
+      if( index < 0 )
+      {
+	 // Not found and accessing array[-1] is bad
+	 break;
+      }
+   }
+
+   if( index < 0 )
+   {
+      func = NULL;
+   }
+   else
+   {
+      func = coil_commands[index].function;
+   }
+
+   return( func );
+} // end of rs485_find_coil_function()
+
+//*********************************************************************
+REG_CMD_T
+   rs485_find_reg_function(
+      uint16_t		regNum )
+{
+   int16_t			index;
+   REG_CMD_T			func;
+   static uint16_t		lastIndex = 0;
+
+   if( lastIndex == 0 )
+   {
+      // Need to find the last index
+      while( reg_commands[lastIndex].regNumber != MB_INVALID_REG )
+      {
+	 lastIndex++;
+      }
+   }
+
+   if( regNum > lastIndex )
+   {
+      // coilNum is large so probably near the end of list
+      index = lastIndex;
+   }
+   else
+   {
+      // start at the given coilNum as an index and look backwards
+      index = regNum;
+   }
+
+   while( reg_commands[index].regNumber != regNum )
+   {
+      index--;
+      if( index < 0 )
+      {
+	 // Not found and accessing array[-1] is bad
+	 break;
+      }
+   }
+
+   if( index < 0 )
+   {
+      func = NULL;
+   }
+   else
+   {
+      func = reg_commands[index].function;
+   }
+
+   return( func );
+} // end of rs485_find_reg_function()
+
+/*
+ **********************************************************************
+ * @brief rs485_readReg() puts one or more 16-bit register values into
+ * the transmit buffer.
+ *
+ * Decodes FC command 0x03
+ *
+ * @param msg - pointer to a msg with a valid CRC
+ *
+ * @return none
+ **********************************************************************
+ */
+void
+  rs485_readReg(
+     MODBUS_ADU_T 	*msg )
+{
+
+    uint16_t		firstReg;
+    uint16_t		reg;
+    uint16_t		numRegs;
+
+    uint16_t		regResult;
+
+    REG_CMD_T 		regFunction;
+
+    firstReg = modbus_reg_first_reg( msg );
+    numRegs = modbus_number_of_regs( msg );
+
+    // Do some error checks
+    if( ( firstReg <= WAVEFORM_MB_REG_STOP ) &&
+	( numRegs <= MAX_MB_COILS_COMM) )
+    {
+       // Simple error checks are look ok
+       rs485_prepare_tx_buf( msg->address, msg->fc );
+       rs485_add_tx_byte( numRegs * 2 );	// 2 bytes per register
+
+       reg = firstReg;
+
+       while( numRegs-- > 0 )
+       {
+	  if( firstReg == SENSOR_NAME_MB_REG_START )
+	  {
+	     regResult = MB_Reg40100( reg++, false, false );
+	  }
+	  else if( firstReg == SENSOR_SN_MB_REG_START )
+	  {
+	     regResult = MB_Reg40112( reg++, false, false );
+	  }
+	  else
+	  {
+	     regFunction = rs485_find_reg_function( reg++ );
+	     if( regFunction != NULL )
+	     {
+		regResult = regFunction( reg++, false, false );
+	     }
+	     else
+	     {
+		regResult = 0;	// need to return something
+	     }
+	  }
+
+	  rs485_add_tx_byte( regResult >> 8 );
+	  rs485_add_tx_byte( regResult & 0x00FF );
+
+       } // end of while()
+    }
+    else
+    {
+       // coils requested beyond range
+       // build an error response
+       rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+       rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
+    }
+
+    // Actually send response
+    rs485_transmit_now();	// send the message
+
+    return;
+} // end of rs485_readReg()
+
+/*
+ **********************************************************************
+ * @brief rs485_writeReg() handles a single 16-bit register write
+ *
+ * Decodes FC command 0x06
+ *
+ * @param msg - pointer to a msg with a valid CRC
+ *
+ * @return none
+ **********************************************************************
+ */
+void
+  rs485_writeReg(
+     MODBUS_ADU_T 	*msg )
+{
+
+    uint16_t			wrResult;
+    REG_CMD_T 			regFunction;
+    MODBUS_ADU_REG_WRITE_T	*m;
+
+    if( msg != NULL )
+    {
+       m = (MODBUS_ADU_REG_WRITE_T *)msg;
+
+       // Do some error checks
+       if( m->regAddr <= WAVEFORM_MB_REG_STOP )
+       {
+	  // Simple error checks are look ok
+	  rs485_prepare_tx_buf( msg->address, msg->fc );
+	  rs485_add_tx_byte( m->regAddr >> 8 );
+	  rs485_add_tx_byte( m->regAddr & 0x00FF );
+
+	  if( (m->regAddr >= SENSOR_NAME_MB_REG_START) &&
+              (m->regAddr <= SENSOR_NAME_MB_REG_STOP) )
+	  {
+	     // use the sensor name function
+	     wrResult = MB_Reg40100( m->regAddr, true, m->regData );
+	  }
+	  else if( (m->regAddr >= SENSOR_SN_MB_REG_START) &&
+		   (m->regAddr <= SENSOR_SN_MB_REG_STOP) )
+	  {
+	     // use the sensor serial number function
+	     wrResult = MB_Reg40112( m->regAddr, true, m->regData );
+	  }
+	  else
+	  {
+	     // Need to find the correct function
+	     regFunction = rs485_find_reg_function( m->regAddr );
+	     if( regFunction != NULL )
+	     {
+		wrResult = regFunction( m->regAddr, true, m->regData );
+	     }
+	     else
+	     {
+		wrResult = 0;	// need to return something
+	     }
+	  }
+
+	  rs485_add_tx_byte( wrResult >> 8 );
+	  rs485_add_tx_byte( wrResult & 0x00FF );
+       }
+       else
+       {
+	  // coils requested beyond range
+	  // build an error response
+	  rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	  rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
+       }
+
+       // Actually send response
+       rs485_transmit_now();	// send the message
+    }
+
+    return;
+} // end of rs485_writeReg()
+
+/*
+ **********************************************************************
+ * @brief rs485_writeMultipleRegs() handles multiple 16-bit register
+ * writes
+ *
+ * Decodes FC command 0x10
+ *
+ * @param msg - pointer to a msg with a valid CRC
+ *
+ * @return none
+ **********************************************************************
+ */
+void
+   rs485_writeMultipleRegs(
+     MODBUS_ADU_T 	*msg )
+{
+
+    uint16_t				wrResult;
+    REG_CMD_T 				regFunction;
+    MODBUS_ADU_MULTIREG_WRITE_T		*m;
+    uint8_t				bytesWritten;
+
+    uint16_t				regToWrite;
+    uint16_t				dataToWrite;
+
+    uint8_t				i;
+
+    if( msg != NULL )
+    {
+       m = (MODBUS_ADU_MULTIREG_WRITE_T *)msg;
+
+       // Do some error checks
+       if( (m->regAddr <= WAVEFORM_MB_REG_STOP) &&
+           (m->byteCount == m->regNum * 2) )
+       {
+	  // Simple error checks are look ok
+	  rs485_prepare_tx_buf( msg->address, msg->fc );
+	  rs485_add_tx_byte( m->regAddr >> 8 );
+	  rs485_add_tx_byte( m->regAddr & 0x00FF );
+	  // need to put number of bytes written next
+
+	  bytesWritten = 0;
+	  for( i = 0; i < m->regNum; i++ )
+	  {
+	     dataToWrite = m->regData[i];
+	     regToWrite = m->regAddr + i;
+
+	     if( (regToWrite >= SENSOR_NAME_MB_REG_START) &&
+		 (regToWrite <= SENSOR_NAME_MB_REG_STOP) )
+	     {
+		// use the sensor name function
+		wrResult = MB_Reg40100( regToWrite, true, dataToWrite );
+	     }
+	     else if( (regToWrite >= SENSOR_SN_MB_REG_START) &&
+		      (regToWrite <= SENSOR_SN_MB_REG_STOP) )
+	     {
+		// use the sensor serial number function
+		wrResult = MB_Reg40112( regToWrite, true, dataToWrite );
+	     }
+	     else
+	     {
+		// Need to find the correct function
+		regFunction = rs485_find_reg_function( regToWrite );
+		if( regFunction != NULL )
+		{
+		   wrResult = regFunction( regToWrite, true, dataToWrite );
+		   if( wrResult == dataToWrite )
+		   {
+		      bytesWritten += 2;
+		   }
+		}
+		else
+		{
+		   wrResult = 0;	// need to return something
+		}
+	     }
+	  }
+
+	  if( bytesWritten == m->byteCount )
+	  {
+	     rs485_add_tx_byte( m->regNum >> 8 );
+	     rs485_add_tx_byte( m->regNum & 0x00FF );
+	  }
+	  else
+	  {
+	     // Something went wrong
+	     rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	     rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_VALUE ); // code 3
+	  }
+       }
+       else
+       {
+	  // coils requested beyond range
+	  // build an error response
+	  rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	  if( m->byteCount != m->regNum * 2 )
+	  {
+	     rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_VALUE ); // code 3
+	  }
+	  else
+	  {
+	     rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
+	  }
+       }
+
+       // Actually send response
+       rs485_transmit_now();	// send the message
+    }
+
+    return;
+} // end of rs485_writeMultipleRegs()
+
 
 // end of file system_io.c

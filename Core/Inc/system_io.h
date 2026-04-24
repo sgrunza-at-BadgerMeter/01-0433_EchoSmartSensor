@@ -135,5 +135,9 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg );
 void rs485_readHoldingReg( MODBUS_ADU_T *msg );
 void rs485_readCoil( MODBUS_ADU_T *msg );
 
+COIL_CMD_T
+   rs485_find_coil_function(
+      uint16_t		coilNum );
+
 
 #endif /* INC_SYSTEM_IO_H_ */

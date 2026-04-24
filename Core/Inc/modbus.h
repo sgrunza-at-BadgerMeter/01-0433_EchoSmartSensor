@@ -27,18 +27,32 @@
 #define MODBUS_SLAVE_ID			0x11	/* Function CDode 17 */
 
 /* Defined ModBus Registers */
-#define SENSOR_NAME_MB_REG_START	100
-#define SENSOR_NAME_MB_REG_STOP		111
-#define SENSOR_SN_MB_REG_START		112
-#define SENSOR_SN_MB_REG_STOP		117
-#define USER_DATA1_MB_REG_START		118
-#define USER_DATA1_MB_REG_STOP		125
-#define USER_DATA2_MB_REG_START		126
-#define USER_DATA2_MB_REG_STOP		134
-#define USER_DATA3_MB_REG_START		800
-#define USER_DATA3_MB_REG_STOP		847
-#define USER_DATA4_MB_REG_START		848
-#define USER_DATA4_MB_REG_STOP		863
+#define	SENSOR_NAME_MB_REG_START	40100
+#define SENSOR_NAME_MB_REG_STOP		40111
+
+#define SENSOR_SN_MB_REG_START		40112
+#define SENSOR_SN_MB_REG_STOP		40117
+
+
+#define WAVEFORM_MB_REG_START		40200
+#define WAVEFORM_MB_REG_STOP		40711
+
+// NOTE: USERDATA1 through USERDATA4 were for an OEM customer
+// with whom Badger Meter is not partnered at this time.  This
+// is legacy code from ATI / Entec days.  Steven Grunza - 04/23/2026
+
+#define USERDATA1_MB_REG_START		40118
+#define USERDATA1_MB_REG_STOP		40125
+
+#define USERDATA2_MB_REG_START		40126
+#define USERDATA2_MB_REG_STOP		40134
+
+#define USERDATA3_MB_REG_START		40800
+#define USERDATA3_MB_REG_STOP		40847
+
+#define USERDATA4_MB_REG_START		40848
+#define USERDATA4_MB_REG_STOP		40863
+
 
 typedef enum MBUS_RESPONSE_E
 {
@@ -94,6 +108,28 @@ typedef struct MODBUS_ADU_T
    uint8_t	payload[2];	// variable length data plus error check
 } MODBUS_ADU_T;		// MODBUS Application Data Unit
 
+typedef struct MODBUS_ADU_REG_WRITE_T
+{
+   uint16_t	length;		// number of byte in the message, not part
+				// of the on-the-wire data
+   uint8_t	address;	// slave address -- first byte of message
+   uint8_t	fc;		// function code -- should be 0x06
+   uint16_t	regAddr;	// address of register
+   uint16_t	regData;	// data to write
+   uint16_t	crc;
+} MODBUS_ADU_REG_WRITE_T;
+
+typedef struct MODBUS_ADU_MULTIREG_WRITE_T
+{
+   uint16_t	length;		// number of byte in the message, not part
+				// of the on-the-wire data
+   uint8_t	address;	// slave bus address -- first byte of message
+   uint8_t	fc;		// function code -- should be 0x10
+   uint16_t	regAddr;	// address of first register
+   uint16_t	regNum;		// number of registers to write
+   uint8_t	byteCount;	// byte count -- should be regNum * 2
+   uint16_t	regData[2];	// start of data to write
+} MODBUS_ADU_MULTIREG_WRITE_T;
 
 typedef bool (*COIL_CMD_T)(bool isWrite, bool val );
 
@@ -102,6 +138,14 @@ typedef struct MB_COIL_CMD_T
    uint16_t	coilNumber;
    COIL_CMD_T	function;
 } MB_COIL_CMD_T;
+
+typedef uint16_t (*REG_CMD_T)(uint16_t reg, bool isWrite, uint16_t val );
+
+typedef struct MB_REG_CMD_T
+{
+   uint16_t	regNumber;
+   REG_CMD_T	function;
+} MB_REG_CMD_T;
 
 /**** Function Prototypes ****/
 
@@ -149,15 +193,10 @@ bool MB_Coil035( bool isWrite, bool val );
 bool MB_Coil036( bool isWrite, bool val );
 bool MB_Coil037( bool isWrite, bool val );
 bool MB_Coil038( bool isWrite, bool val );
-bool MB_Coil039( bool isWrite, bool val );
-bool MB_Coil040( bool isWrite, bool val );
 
-bool MB_Coil041( bool isWrite, bool val );
-bool MB_Coil042( bool isWrite, bool val );
-bool MB_Coil043( bool isWrite, bool val );
-bool MB_Coil044( bool isWrite, bool val );
-bool MB_Coil045( bool isWrite, bool val );
 
+#define MB_INVALID_COIL		0xFFFF
+#define MB_INVALID_REG		0xFFFF
 
 #ifndef _MODBUS_C_
 extern
@@ -198,7 +237,8 @@ MB_COIL_CMD_T	coil_commands[]
 	 { 35, MB_Coil035 },
 	 { 36, MB_Coil036 },
 	 { 37, MB_Coil037 },
-	 { 38, MB_Coil038 }
+	 { 38, MB_Coil038 },
+	 { MB_INVALID_COIL, NULL }
 }
 #endif
 ;
@@ -212,63 +252,124 @@ void MB_WriteMultReg(void);
 void MB_Diag(void);
 void MB_SlaveID(void);
 
-void MB_Reg40001(void);
-void MB_Reg40002(void);
-void MB_Reg40003(void);
-void MB_Reg40004(void);
-void MB_Reg40005(void);
-void MB_Reg40006(void);
-void MB_Reg40007(void);
-void MB_Reg40008(void);
-void MB_Reg40009(void);
-void MB_Reg40010(void);
-void MB_Reg40011(void);
-void MB_Reg40012(void);
-void MB_Reg40013(void);
-void MB_Reg40014(void);
-void MB_Reg40015(void);
-void MB_Reg40016(void);
-void MB_Reg40017(void);
-void MB_Reg40018(void);
-void MB_Reg40019(void);
-void MB_Reg40020(void);
-void MB_Reg40021(void);
-void MB_Reg40022(void);
-void MB_Reg40023(void);
-void MB_Reg40024(void);
-void MB_Reg40025(void);
-void MB_Reg40026(void);
-void MB_Reg40027(void);
-void MB_Reg40028(void);
-void MB_Reg40029(void);
-void MB_Reg40030(void);
-void MB_Reg40031(void);
-void MB_Reg40032(void);
-void MB_Reg40033(void);
-void MB_Reg40034(void);
-void MB_Reg40035(void);
-void MB_Reg40036(void);
-void MB_Reg40037(void);
-void MB_Reg40038(void);
-void MB_Reg40039(void);
-void MB_Reg40040(void);
-void MB_Reg40041(void);
-void MB_Reg40042(void);
-void MB_Reg40043(void);
-void MB_Reg40044(void);
-void MB_Reg40045(void);
+uint16_t MB_Reg40001( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40002( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40003( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40004( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40005( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40006( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40007( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40008( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40009( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40010( uint16_t reg, bool isWrite, uint16_t val );
 
-void MB_Reg40101(uint8_t bReg);		// Sensor Name
-void MB_Reg40113(uint8_t bReg);		// Sensor Serial Number
-void MB_Reg40118(uint8_t bReg);		// User Specific Data - Field 1.	(1x8 byte array)
-void MB_Reg40128(uint8_t bReg);		// User Specific Data - Field 2.	 1x9 byte array)
-void MB_Reg40201(uint16_t bReg);		// Waveform Data
-void MB_Reg40801(uint8_t bReg);		// User Specific Data - Field 3. (3x32 byte array)
-void MB_Reg40848(uint8_t bReg);		// User Specific Data - Field 4. (8x2 byte array)
+uint16_t MB_Reg40011( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40012( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40013( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40014( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40015( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40016( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40017( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40018( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40019( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40020( uint16_t reg, bool isWrite, uint16_t val );
 
-void MB_Reg50000( void );		// Sensor to Controller command to set 4-20mA loop Level
-void MB_Reg50001( void );		// Sensor to Controller command to set 4-20mA loop Aux
+uint16_t MB_Reg40021( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40022( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40023( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40024( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40025( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40026( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40027( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40028( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40029( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40030( uint16_t reg, bool isWrite, uint16_t val );
 
+uint16_t MB_Reg40031( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40032( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40033( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40034( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40035( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40036( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40037( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40038( uint16_t reg, bool isWrite, uint16_t val );
+
+uint16_t MB_Reg40042( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40043( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40044( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg40045( uint16_t reg, bool isWrite, uint16_t val );
+
+uint16_t MB_Reg40100( uint16_t reg, bool isWrite, uint16_t val );
+
+uint16_t MB_Reg40112( uint16_t reg, bool isWrite, uint16_t val );
+
+uint16_t MB_Reg40200( uint16_t reg, bool isWrite, uint16_t val );
+
+uint16_t MB_Reg50000( uint16_t reg, bool isWrite, uint16_t val );
+uint16_t MB_Reg50001( uint16_t reg, bool isWrite, uint16_t val );
+
+#ifndef _MODBUS_C_
+extern
+#endif
+MB_REG_CMD_T	reg_commands[]
+#ifdef _MODBUS_C_
+= {
+	 { 40001, MB_Reg40001 },
+	 { 40002, MB_Reg40002 },
+	 { 40003, MB_Reg40003 },
+	 { 40004, MB_Reg40004 },
+	 { 40005, MB_Reg40005 },
+	 { 40006, MB_Reg40006 },
+	 { 40007, MB_Reg40007 },
+	 { 40008, MB_Reg40008 },
+	 { 40009, MB_Reg40009 },
+	 { 40010, MB_Reg40010 },
+
+	 { 40011, MB_Reg40011 },
+	 { 40012, MB_Reg40012 },
+	 { 40013, MB_Reg40013 },
+	 { 40014, MB_Reg40014 },
+	 { 40015, MB_Reg40015 },
+	 { 40016, MB_Reg40016 },
+	 { 40017, MB_Reg40017 },
+	 { 40018, MB_Reg40018 },
+	 { 40019, MB_Reg40019 },
+	 { 40020, MB_Reg40020 },
+
+	 { 40021, MB_Reg40021 },
+	 { 40022, MB_Reg40022 },
+	 { 40023, MB_Reg40023 },
+	 { 40024, MB_Reg40024 },
+	 { 40025, MB_Reg40025 },
+	 { 40026, MB_Reg40026 },
+	 { 40027, MB_Reg40027 },
+	 { 40028, MB_Reg40028 },
+	 { 40029, MB_Reg40029 },
+	 { 40030, MB_Reg40030 },
+
+	 { 40041, MB_Reg40031 },
+	 { 40042, MB_Reg40032 },
+	 { 40043, MB_Reg40033 },
+	 { 40044, MB_Reg40034 },
+	 { 40045, MB_Reg40035 },
+
+	 { SENSOR_NAME_MB_REG_START, MB_Reg40100 },	// Sensor Name 1 of 12
+
+	 { SENSOR_SN_MB_REG_START, MB_Reg40112 },	// Serial number 1 of 6
+
+	 //{ USERDATA1_MB_REG_START, MB_Reg40118 },	// User Spific data 1
+
+	 //{ USERDATA2_MB_REG_START, MB_Reg40126 },	// User Spific data 2
+
+	 { WAVEFORM_MB_REG_START, MB_Reg40200 },	// Waveform data[0, 511]
+
+	 //{ USERDATA3_MB_REG_START, MB_Reg40801 },	// User Specific Data 3 x 32-bit array
+
+	 //{ USERDATA4_MB_REG_START, MB_Reg40848 },	// User Specific Data 8 x 2 array
+	 { MB_INVALID_REG, NULL }
+}
+#endif
+;
 
 
 #define NBR_MB_REGS		44	/* Number of Modbus Registers in SSP */
@@ -277,7 +378,6 @@ void MB_Reg50001( void );		// Sensor to Controller command to set 4-20mA loop Au
 
 #define NBR_MB_COILS		40	/* Number of Modbus Coils in SSP */
 #define MAX_MB_COILS_COMM	80	/* Maximum number of consecutive coils IO can support */
-
 
 
 #endif /* INC_MODBUS_H_ */

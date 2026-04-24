@@ -75,3 +75,7 @@ Files to fix after code re-generation:
 stm32h5xx_hal_conf.h
 tim.c
 stm32h5xx_it.c
+
+http://onlinemetals.com has a 1/32" thick silicone pad 12" x 12" for $60.92 that could interface between a device under test and a reference receiver device.
+
+https://www.onlinemetals.com/en/buy/1-32-thick-fda-silicone-rubber-sheet-with-high-temp-adhesive-10a/pid/mp-00025861?srsltid=AfmBOordNa7FXHOWUrYKpqx2W8OAqxPmJJThN5jSRi_zTDDM37P1HdWh
