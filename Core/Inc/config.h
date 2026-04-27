@@ -21,6 +21,10 @@
 // Defined in crc.c
 extern CRC_HandleTypeDef hcrc;
 
+// TODO:  Refine this power level
+#define SYS_POWER_BASE_VAL		5000
+#define SYS_POWER_TURB_VAL		1000
+#define SYS_POWER_WIPRE_VAL		1000
 
 typedef enum CFG_LOAD_TYPE_E
 {
@@ -171,13 +175,13 @@ typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
    uint8_t		smoothing;
    uint8_t		deltaSmoothing;
    uint8_t		sensitivity;
-   uint8_t		algorithm;
+   uint8_t		algorithm;		///< 0 = select closest derivate, 1 = farthest
    uint8_t		candidates;
    uint16_t		wallZone;		///< inches or cm
    uint8_t		settlingZone;
    uint8_t		cellLimit;
-   uint16_t		gateMin;		///< min distance from left gate to track in basic increments
-   uint16_t		gateMax;		///< min distance from right gate to track
+   uint16_t		lgMin;			///< min distance from left gate to track in basic increments
+   uint16_t		rgMin;			///< min distance from right gate to track
    uint8_t		history;
    uint16_t		speedSound;		///< speed of sound in FPS: 1000 - 6000
    uint8_t		gainIncrement;		///< range 5 -50
@@ -197,16 +201,6 @@ typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
    char			name[ MAX_NAME_LEN ];
    uint16_t		turbLoopMin;		///< value that provides 4mA loop current (12-bits) (AuxLoop)
    uint16_t		turbLoopMax;		///< value that provides 20mA loop current (12-bits) (AuxLoop)
-
-#define MAX_USER_DATA_FIELD1    16              //* 1x16 byte array
-#define MAX_USER_DATA_FIELD2    18              //* 1x18 byte array
-#define MAX_USER_DATA_FIELD3    96              //* 3x32 byte array
-#define MAX_USER_DATA_FIELD4    32 		//* 8x4 byte array
-
-   uint8_t		UserData_Field1[MAX_USER_DATA_FIELD1];	/* User Data - Field 1 */
-   uint8_t		UserData_Field2[MAX_USER_DATA_FIELD2];	/* User Data - Field 2 */
-   uint8_t		UserData_Field3[MAX_USER_DATA_FIELD3];	/* User Data - Field 3 */
-   uint8_t		UserData_Field4[MAX_USER_DATA_FIELD4];	/* User Data - Field 4 */
 
    int16_t		fixedGainBandMidPoint;	///< fixed value
 
@@ -286,6 +280,8 @@ typedef struct SSP_STATUS_T
    uint32_t		slave_msg_count;	///< number of RS485 messages received for this device
 
    float		fTrackMeasurement;	///< Current Track Measurement
+   uint16_t		wiperMotorVoltage;	///< wiper motor voltage in mV
+   float		fDensity;		///< TBD
 
 } SSP_STATUS_T;
 

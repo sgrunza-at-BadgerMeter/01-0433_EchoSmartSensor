@@ -1162,7 +1162,7 @@ void
        }
        else
        {
-	  // coils requested beyond range
+	  // register address requested beyond range
 	  // build an error response
 	  rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
 	  rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2

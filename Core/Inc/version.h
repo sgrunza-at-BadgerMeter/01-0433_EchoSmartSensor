@@ -17,6 +17,9 @@
 extern char	*BuildInfo;
 extern char	*SoftwareNameString;
 
+#define FW_VERSION_MSB		0x00
+#define FW_VERSION_LSB		0x00
+
 
 #endif /* INC_VERSION_H_ */
 

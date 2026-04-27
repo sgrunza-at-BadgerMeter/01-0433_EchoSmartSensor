@@ -876,48 +876,70 @@ bool MB_Coil038( bool isWrite, bool val )
 } // end of MB_Coil038
 
 //*********************************************************************
+//*********************************************************************
+//*
+//* End of the Coil code, beginning of the Register code
+//*
+//*********************************************************************
+//*********************************************************************
+
+
+//*********************************************************************
 //* Calculated interface position
+//*
+//* Current Interface (Register 40001)
+//* The Current Interface register is used to indicate the location of
+//* the detected interface level.
+//*
 //* Read only
 //*********************************************************************
 int16_t
    MB_Reg40001(
       uint16_t 		reg,
       bool 		isWrite,
-      uint16_t 		val )
+      int16_t 		val,
+      uint16_t		*errCode )
 {
-   int16_t		value;
+   int16_t		value = val;;
    float		fVal;
 
-   if( !isWrite )
+   if( errCode != NULL )
    {
-      switch( SSP_configuration.units )
+      if( !isWrite )
       {
-	 // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
-	 case UNITS_INCH:
-	    fVal = (fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
-	    break;
-	 case UNITS_METER:
-	    fVal = (fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
-	    break;
-	 case UNITS_CM:
-	    fVal = (fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
-	    break;
-	 case UNITS_FEET:
-	 default:
-	    fVal = (fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
-	    break;
+	 // This is a read
+	 switch( SSP_configuration.units )
+	 {
+	    // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
+	    case UNITS_INCH:
+	       fVal = (fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
+	       break;
+	    case UNITS_METER:
+	       fVal = (fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
+	       break;
+	    case UNITS_CM:
+	       fVal = (fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
+	       break;
+	    case UNITS_FEET:
+	    default:
+	       fVal = (fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
+	       break;
+	 }
+	 value = (int16_t) fVal;		// Get integer portion
+	 if( modf(fVal,&fVal) >= 0.50 )
+	 {
+	    ++value;
+	 }
+	 *errCode = MBUS_RESPONSE_OK;
       }
-      value = (int16_t) fVal;		// Get integer portion
-      if( modf(fVal,&fVal) >= 0.50 )
+      else
       {
-	 ++value;
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+	 value = 0;
       }
    }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;		// Advance pointer
-   }
+
+   return( value );
 } // end of MB_Reg40001()
 
 //*********************************************************************
@@ -938,42 +960,1933 @@ int16_t
    MB_Reg40002(
       uint16_t 		reg,
       bool 		isWrite,
-      uint16_t 		val )
+      int16_t 		val,
+      uint16_t		*errCode )
 {
-   int16_t		value;
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.units;
+
+      }
+      else
+      {
+	 // This is a write
+	 if( ( val >= 0) && (val <= 3) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.units = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40002
+
+//*********************************************************************
+//* Tank Depth (Register 40003)
+//*
+//* Tank Depth is the distance from the surface of the water to the
+//* bottom of the tank. It is a binary number in either inches or
+//* centimeters. This is the complete span over which the sensor will
+//* be calibrated.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40003(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.tankDepth;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.tankDepth = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40003()
+
+//*********************************************************************
+//* Zero Adjust (Register 40004)
+//*
+//* Zero Adjust is an offset value which locates the face of the sensor
+//* above or below the surface of the water level of the tank. This
+//* value modifies the level/range measurement to adjust for the sensor
+//* location. The value can be positive (sensor face installed below
+//* the water level) or negative (sensor face installed above the water
+//* level – i.e. in a standpipe).
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40004(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.zeroAdjust;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.zeroAdjust = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40004()
+
+//*********************************************************************
+//* Min Range (Register 40005)
+//*
+//* Minimum Range is an adjustable value that determines the minimum
+//* distance that the sensor will measure. This number is always
+//* positive and must be less than the Tank Depth value.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40005(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.minLevel;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val > 0) && (val <= SSP_configuration.tankDepth) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.minLevel = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40005()
+
+//*********************************************************************
+//* Max Range (Register 40006)
+//*
+//* Maximum Range is an adjustable value that determines the maximum
+//* distance that the sensor will measure. This number is always
+//* positive and must be less than 382 inches (9715 cm). When the Tank
+//* Depth parameter (4.6.3) is changed, this number is automatically
+//* adjusted to 110% of the Tank Depth value.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40006(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.maxLevel;
+      }
+      else
+      {
+	 // This is a write
+	 if( val > 0 )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.maxLevel = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40006()
+
+//*********************************************************************
+//* Sensitivity (Register 40007)
+//*
+//* Interfaces are detected by analysis of wave form derivatives.
+//* Sensitivity is an adjustable threshold that determines which
+//* derivatives are valid for tracking. Valid range of numbers is from
+//* 0 to 100.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40007(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.sensitivity;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 100) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.sensitivity = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40007()
+
+//*********************************************************************
+//* Wall Zone (Register 40008)
+//*
+//* The Wall Zone value determines the size of the adjustable distance
+//* above the tank bottom.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40008(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.wallZone;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 100) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.wallZone = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40008()
+
+//*********************************************************************
+//* Gate Rate (Register 40009)
+//*
+//* The Gate Rate value determines the maximum movement of the gates in
+//* any one update. Valid range of the number is from 0 to 50.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40009(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.cellLimit;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 50) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.cellLimit = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40009()
+
+//*********************************************************************
+//* LG Min (Register 40010)
+//*
+//* The LG Min value determines the minimum distance that the left gate
+//* can be placed from the current track value.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40010(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.lgMin;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.lgMin = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40010()
+
+//*********************************************************************
+//* RG Min (Register 40011)
+//*
+//* The RG Min value determines the minimum distance that the right
+//* gate can be placed from the current track value.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40011(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.rgMin;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.rgMin = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40011()
+
+//*********************************************************************
+//* Dampening (Register 40012)
+//*
+//* The Dampening register is used to average the current track
+//* location (reported interface location). The dampening value
+//* determines the number of updates that will be averaged together to
+//* provide a track location. Valid range of the number is from 1 to 250.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40012(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.history;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 1) && (val <= 250) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.history = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40012()
+
+//*********************************************************************
+//* Sound Speed (Register 40013)
+//*
+//* The Sound Speed register is used to adjust the speed of sound used
+//* for all sensor distance measurements.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in feet per second (FPS).
+//* If the Units register (4.6.2) is set for meters or centimeters then
+//* the number represents the measurement in meters per second (MPS).
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40013(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.speedSound;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.speedSound = val;
+	 BuildRangeTable();
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40013()
+
+
+
+//*********************************************************************
+//* Gain Increment (Register 40014)
+//*
+//* The Gain Increment register determines the step size in the
+//* auto-gain adjustment. Valid range of the number is from 5 to 50.
+//* The reported binary value is times 10 the value utilized by the
+//* sensor (i.e. 5 = 0.5).
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40014(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.gainIncrement;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 1) && (val <= 50) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.gainIncrement = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40014()
+
+//*********************************************************************
+//* Wall Zone AG (Register 40015)
+//*
+//* The Wall Zone AG controls the amount of gain applied to amplify the
+//* waveform in the Wall Zone (4.6.8) when the auto gain coil is set to
+//* 1 (ON) (4.5.1). The valid range of the register is 0 to 100 with 10
+//* as default. Lowering this number will decrease the gain applied to
+//* the waveform. Raising this number will increase the amount of gain.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40015(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.wallZoneAG;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 100) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.wallZoneAG = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40015()
+
+//*********************************************************************
+//* AG Set Point (Register 40016)
+//*
+//* The AG Set Point controls the amount of gain applied to amplify the
+//* waveform not in the Wall Zone (4.6.8) when the auto gain coil is
+//* set to 1 (ON) (4.5.1). The valid range of the register is 0 to 50
+//* with 10 as default. Lowering this number will decrease the gain
+//* applied to the waveform. Raising this number will increase the
+//* amount of gain.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40016(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.AGsetPoint;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 50) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.AGsetPoint = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40016()
+
+//*********************************************************************
+//* Gain Band (Register 40017)
+//*
+//* The Gain Band register is the range in which the gain is permitted
+//* to fluctuate ± the Gain Band Mid Point value (4.6.31). Valid range
+//* is from 5 to 30.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40017(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.gainBand;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 5) && (val <= 30) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.gainBand = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40017()
+
+//*********************************************************************
+//* SP 4mA (Register 40018)
+//*
+//* The 4mA Set Point (SP) register is used to specify the value that
+//* will be used as the 4mA set point for the analog output scaling.
+//* This value is typically set to zero.
+//*
+//* If the Measure coil (4.5.2) is set for Level, the number
+//* represents the Level measurement. If the Measure coil is set for
+//* Range, the number represents the Range measurement.  If the Units
+//* register (4.6.2) is set for feet or inches then the binary number
+//* represents the measurement in inches. If the Units register
+//* (4.6.2) is set for meters or centimeters then the number represents
+//* the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40018(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.setPoint4ma;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 5) && (val <= 30) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.setPoint4ma = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40018()
+
+//*********************************************************************
+//* SP 20mA (Register 40019)
+//*
+//* The 20mA Set Point (SP) register is used to specify the value that
+//* will be used as the 20mA set point for the analog output scaling.
+//* This value is typically set to the Tank Depth value (4.6.3).
+//*
+//* If the Measure coil (4.5.2) is set for Level, the number represents
+//* the Level measurement. If the Measure coil is set for Range, the
+//* number represents the Range measurement.
+//*
+//* If the Units register (4.6.2) is set for feet or inches then the
+//* binary number represents the measurement in inches. If the Units
+//* register (4.6.2) is set for meters or centimeters then the number
+//* represents the measurement in centimeters.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40019(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.setPoint20mA;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.setPoint20mA = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40019()
+
+//*********************************************************************
+//* EL Action (Register 40020)
+//*
+//* The Echo Loss (EL) Action register determines what action will be
+//* taken on the Level current loop if there is a loss of echo for the
+//* duration of the Echo Delay (4.6.21). For this action to be valid
+//* the Echo Loss coil (4.5.4) must be set ON.
+//*
+//* Value 	Action
+//* 0		Force 4 ma level (Drive Low)
+//* 1		Force 20 ma level (Drive High)
+//* 2		Cycle – Alternate Low and High
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40020(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.echoLossAction;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 2) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.echoLossAction = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40020()
+
+//*********************************************************************
+//* Echo Delay (Register 40021)
+//*
+//* The Echo Delay register determines the number of minutes the sensor
+//* must experience a loss of signal condition before the sensor
+//* initiates the Echo Loss Action (4.6.20). If the Echo Loss coil
+//* (4.5.4) is turned OFF, the value in the Echo Delay register is
+//* ignored and the sensor will not initiate the Echo Loss Action.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40021(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.echoDelay;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.echoDelay = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40021()
+
+//*********************************************************************
+//* CP 4mA (Register 40022)
+//*
+//* The 4mA Calibration Point (CP) register contains the binary number
+//* necessary to write to the hardware to generate a 4mA signal on the
+//* current loop used for the level.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40022(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.levelLoopMin;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.levelLoopMin = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40022()
+
+//*********************************************************************
+//* CP 4mA (Register 40022)
+//*
+//* The 20mA Calibration Point (CP) register contains the binary number
+//* necessary to write to the hardware to generate a 20mA signal on the
+//* current loop used for the level.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40023(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.levelLoopMax;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.levelLoopMax = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40023()
+
+//*********************************************************************
+//* Current Gain (Register 40024)
+//*
+//* When the Auto Gain coil (4.5.1) is OFF, the Current Gain register
+//* is used to control the gain amplification value. In this mode the
+//* Current Gain register provides read/write capability. When the Auto
+//* Gain coil is ON, the Current Gain register is read only and provides
+//* an indication of the current gain value. Valid Range of number is
+//* from -4095 to +4095.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40024(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.gainAdjust;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= -4095) && (val <= 4095) )
+	 {
+	    if( !SSP_status.auto_gain )
+	    {
+	       *errCode = MBUS_RESPONSE_OK;
+	       SSP_configuration.gainAdjust = val;
+	    }
+	    else
+	    {
+	       // read-only auto gain is on
+	       *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	    }
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40024()
+
+//*********************************************************************
+//* Ping Rate Delay (Register 40025)
+//*
+//* The sensor normally collects waveform data at a pre-programmed rate.
+//* The ping rate delay register is used to add a delay into the
+//* waveform collection sequence. Valid range of the register is 0 to 100.
+//* The rate for each number is in 10mS units. If the ping rate delay
+//* register is set to “0” there is no delay added. If the ping rate
+//* delay register is set to “5” there would be a 50mS delay between
+//* the collection of each waveform.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40025(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.pingDelay;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 100) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.pingDelay = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40025()
+
+//*********************************************************************
+//* Update Rate (Register 40026)
+//*
+//* The Update Rate register is used to determine how many waveforms
+//* will be combined into a single waveform that is used for analysis.
+//* With a setting of 1, the sensor will average 8 waveforms. The
+//* maximum setting of 20 results in a total of 160 waveforms combined
+//* into the resulting final waveform. (Note: An update rate of 0
+//* provides a single non-combined waveform).
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40026(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.updateRate;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 1) && (val <= 20) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.updateRate = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40026()
+
+//*********************************************************************
+//* Smoothing Rate (Register 40027)
+//*
+//* The Smoothing Rate register is used to smooth the 1024 cells to
+//* produce the final waveform for analysis. Valid range of numbers is
+//* from 0 to 25. A value of 0 provides no smoothing.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40027(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.smoothing;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 25) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.smoothing = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40027()
+
+//*********************************************************************
+//* Delta Smoothing (Register 40028)
+//*
+//* The Delta Smoothing Rate register is used to smooth the derivative
+//* waveform in the same manner as the Smoothing Rate (Register 40027)
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40028(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.deltaSmoothing;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 25) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.deltaSmoothing = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40028()
+
+//*********************************************************************
+//* Wiper Delay (Register 40029)
+//*
+//* The Wiper Delay register determines the number of seconds that the
+//* wiper (when installed) is off between cycles. Valid range of the
+//* number is from 0 to 240. A value of 0 indicates that the wiper is
+//* OFF and should not be cycled
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40029(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.wiperDelay;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 0) && (val <= 240) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.wiperDelay = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40029()
+
+//*********************************************************************
+//* Interface (Register 40030)
+//*
+//* The Interface register determines how the sensor interprets the
+//* waveform data. If the register is set to 0 then the sensor selects
+//* the “first” (closest to the sensor) derivative which satisfies the
+//* Sensitivity threshold (4.6.7). If the register value is set to 1
+//* then the sensor selects the “last” (farthest from the sensor)
+//* interface.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40030(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.algorithm;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val == 0) || (val == 1) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.algorithm = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40030()
+
+//*********************************************************************
+//* Gain Band MP (Register 40031)
+//*
+//* The Gain Band Mid Point (MP) register is used to position the gain
+//* band. During initialization, the sensor calculates a gain band mid
+//* point. When Auto Gain is enabled (4.5.1) the sensor will
+//* automatically adjust the gain about this mid point. The amount of
+//* adjustment is determined by the Gain Band register (4.6.17).
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40031(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.fixedGainBandMidPoint;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val == 0) || (val == 1) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.fixedGainBandMidPoint = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40031()
+
+//*********************************************************************
+//* Sensor Address (Register 40032)
+//*
+//* The Sensor Address register contains the network address for the
+//* sensor. Once this register is changed the sensor will then
+//* communicate using the new network address.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40032(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.address;
+      }
+      else
+      {
+	 // This is a write
+	 if( (val >= 1) && (val <= 248) )
+	 {
+	    *errCode = MBUS_RESPONSE_OK;
+	    SSP_configuration.address = val;
+	 }
+	 else
+	 {
+	    *errCode = MBUS_RESPONSE_ILLEGAL_DATA_VALUE;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40032()
+
+//*********************************************************************
+//* Op Range Index (Register 40033)
+//*
+//* This read-only register is used to indicate the operating range
+//* that the sensor is currently using. Since the operating range
+//* determines the basic sensor sample timing, this register is used to
+//* determine the timing used for sample points in the waveform data.
+//*
+//* Index 	Operating Range 	Sample Time
+//*	0	5 ft (1.524 m)		2.501687886 uSec
+//*	1	10 ft (3.048 m)		5.003375771 uSec
+//*	2	20 ft (6.096 m)		10.00675154 uSec
+//*	3	30 ft (9.144 m)		15.01012731 uSec
+//*
+//* Read-only
+//*********************************************************************
+int16_t
+   MB_Reg40033(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.address;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40033()
+
+//*********************************************************************
+//* TCP 4mA (Register 40034)
+//*
+//* The 4mA Turbidity Calibration Point (TCP) register contains the
+//* binary number necessary to write to the hardware to generate a 4mA
+//* signal on the current loop used for the turbidity.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40034(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.turbLoopMin;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.turbLoopMin = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40034()
+
+//*********************************************************************
+//* TCP 20mA (Register 40035)
+//*
+//* The 20mA Turbidity Calibration Point (TCP) register contains the
+//* binary number necessary to write to the hardware to generate a 20mA
+//* signal on the current loop used for the turbidity.
+//*
+//* Read/Write
+//*********************************************************************
+int16_t
+   MB_Reg40035(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 value = SSP_configuration.turbLoopMax;
+      }
+      else
+      {
+	 // This is a write
+	 *errCode = MBUS_RESPONSE_OK;
+	 SSP_configuration.turbLoopMax = val;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40035()
+
+//*********************************************************************
+//* Turbidity NTU (Register 40036)
+//*
+//* The Turbidity NTU register returns the current turbidity NTU value
+//* times 100 (0-5000). Divide the returned number by 100 to get the
+//* actual NTU value. If the turbidity option is not installed and
+//* enabled (See 4.5.12) then the register returns a 0 value. Trying
+//* to write to this register returns an error.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40036(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 if( SSP_configuration.hasTurbidity )
+	 {
+	    value = SSP_status.ntu;
+	 }
+	 else
+	 {
+	    value = 0;
+	 }
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40036()
+
+//*********************************************************************
+//* Track Percentage (Register 40037)
+//*
+//* The Track Percentage register returns the current Level as a
+//* percentage of Tank Depth. The value in the register is 10 times
+//* the actual percentage (0-10000). Divide the returned number by 10
+//* to get the actual percentage. Trying to write to this register
+//* returns an error.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40037(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+   int16_t		i16Val;
    float		fVal;
 
-   if( !isWrite )
+
+
+   if( errCode != NULL )
    {
-      switch( SSP_configuration.units )
+      if( !isWrite )
       {
-	 // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
-	 case UNITS_INCH:
-	    fVal = (fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
-	    break;
-	 case UNITS_METER:
-	    fVal = (fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
-	    break;
-	 case UNITS_CM:
-	    fVal = (fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
-	    break;
-	 case UNITS_FEET:
-	 default:
-	    fVal = (fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
-	    break;
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+	 switch( SSP_configuration.units )
+	 {
+	    // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
+	    case UNITS_INCH:
+	       fval = (SSP_status.fTrackMeasurement * 10000) / SSP_configuration.tankDepth;
+	       break;
+
+	    case UNITS_METER:
+	       fval = (SSP_status.fTrackMeasurement * 2.54 * 10000) / SSP_configuration.tankDepth;
+	       break;
+
+	    case UNITS_CM:
+	       fval = (SSP_status.fTrackMeasurement * 2.54 * 10000) / SSP_configuration.tankDepth;
+	       break;
+
+	    case UNITS_FEET:
+	    default:
+	       fval = (SSP_status.fTrackMeasurement * 10000) / SSP_configuration.tankDepth;
+	       break;
+	 }
+
+	 i16Val = fVal;
+	 if( modf( fVal, &fVal ) >= 0.50 )
+	 {
+	    ++i16Val;
+	 }
+
+	 value = i16Val;
       }
-      value = (int16_t) fVal;		// Get integer portion
-      if( modf(fVal,&fVal) >= 0.50 )
+      else
       {
-	 ++value;
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
       }
    }
-   else
+
+   return( value );
+} // end of MB_Reg40037()
+
+//*********************************************************************
+//* Power Value (Register 40038)
+//*
+//* The Power Value register returns the power required for the current
+//* mode – Standby or High Power (4.5.11). The value in the register is
+//* in milliwatts (mW). Trying to write to this register returns an
+//* error.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40038(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+
+   int16_t		value = val;
+
+   if( errCode != NULL )
    {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;		// Advance pointer
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+	 value = SYS_POWER_VAL;
+
+	 if( SSP_configuration.hasTurbidity )
+	 {
+	    value += SYS_POWER_TURB_VAL;
+	 }
+
+	 if( SSP_configuration.hasWiper )
+	 {
+	    value += SYS_POWER_WIPER_VAL;
+	 }
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
    }
-} // end of MB_Reg40002
+
+   return( value );
+} // end of MB_Reg40038()
+
+//*********************************************************************
+//* Power Value (Register 40039)
+//*
+//* Returns wiper motor voltage in mV
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40039(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+	 value = SSP_status.wiperMotorVoltage;
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40039()
+
+//*********************************************************************
+//* Hardware Version (Register 40042)
+//*
+//* The Hardware Version register returns the version number of the
+//* hardware. Trying to write to this register returns an error.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40042(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+	 value = SSP_configuration.hw_id;
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40042()
+
+//*********************************************************************
+//* Software Version (Register 40043)
+//*
+//* The Software Version register returns the version number of the
+//* software. Trying to write to this register returns an error.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40043(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+	 value = (FW_VERSION_MSB << 8) | FW_VERSION_LSB;
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40043()
+
+//*********************************************************************
+//* Turbidity NTU Percentage (Register 40044)
+//*
+//* The Turbidity NTU Percentage register returns the current Turbidity
+//* NTU percentage value times 100 (0-10000). Divide the returned number
+//* by 100 to get the actual NTU percentage value. If the Turbidity
+//* Installed coil (4.5.12) is not set, then the register returns a 0
+//* value. Trying to write to this register returns an error.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40044(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+
+   int16_t		value = val;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+	 if( SSP_configuration.hasTurbidity )
+	 {
+	    value = SSP_status.ntu * 2;
+	 }
+	 else
+	 {
+	    value = 0;
+	 }
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40044()
+
+//*********************************************************************
+//* Dispersed Solids (Register 40045)
+//*
+//* The Dispersed Solids register is used to indicate the detected
+//* interface level for the dispersed solids. The setting of the Units
+//* register (4.6.2) determines the base number representation as shown
+//* in Figure 10. In all cases the binary number presented represents
+//* times 10 the base measurement (i.e. 200 = 20.0 units). See
+//* description of USUI format for additional information on the format
+//* of the number contained in this register.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Reg40045(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      uint16_t		*errCode )
+{
+
+   int16_t		value = val;
+   float		fVal;
+
+   if( errCode != NULL )
+   {
+      if( !isWrite )
+      {
+	 // This is a read
+	 *errCode = MBUS_RESPONSE_OK;
+
+
+	 switch( SSP_configuration.units )
+	 {		/* Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches */
+	    case UNITS_INCH:
+	       fVal = (SSP_status.fDensity) * 10;	/* Convert to 10 * inch measurement */
+	       break;
+
+	    case UNITS_METER:
+	       fVal = (SSP_status.fDensity * 2.54);	/* Convert to 10 * meter measurement */
+	       break;
+
+	    case UNITS_CM:
+	       fVal = (SSP_status.fDensity * 25.4);	/* Convert to 10 * cm measurement */
+	       break;
+
+	    case UNITS_FEET:
+	    default:
+	       fVal = (SSP_status.fDensity *10)/12;	/* Convert to 10 * ft measurement */
+	       break;
+	 }
+
+	 value = fVal;	// Get integer portion
+	 if( modf(fVal,&fVal) >= 0.50 )
+	 {
+	    ++value;	// Round value
+	 }
+
+	 else
+	 {
+	    // This is a write to a read-only register
+	    *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+	 }
+      }
+   }
+
+   return( value );
+} // end of MB_Reg40045()
+
+
+
 
 #if 0
 /*********************************************************************
@@ -1070,1171 +2983,49 @@ void MB_SlaveID(void)
 
 
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40002                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40002               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40002(void)
-{
-   BYTE uTmp;
 
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.Units);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData > UNITS_CM)	// If invalid data
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 uTmp = param.Units;					// Save for later comparison
-	 param.Units = *pRegData;	// Save Data
-	 if(uTmp != param.Units)		// Did units change
-	    UpdateNewUnits(uTmp);	// Update units
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40003                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40003               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40003(void)
-{
-   uint iTmp;
 
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.TankDepth);
-   }
-   else
-   {
-      iTmp = GetWord(pRegData);		// Get word value
-      if(RangeScale(param.TankDepth) != RangeScale(iTmp))
-	 warmBoot = TRUE;
-      param.TankDepth = iTmp;
-      SaveSettings();
-      pRegData += 2;	// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40004                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40004               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40004(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.ZeroAdjust);
-   }
-   else
-   {
-      param.ZeroAdjust = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;		// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40005                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40005               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40005(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.MinLevel);
-   }
-   else
-   {
-      param.MinLevel = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;		// Adjust pointer to keep it correct
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40006                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40006               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40006(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.MaxLevel);
-   }
-   else
-   {
-      param.MaxLevel = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;		// Adjust pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40007                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40007               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40007(void)
-{
-#if(0)
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      if(param.BitFlags & AUTO_GAIN_ON)
-	 SendByte(0x01);	// Show it's ON
-      else
-	 SendByte(0x00);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData)		// IF auto Gain on requested
-	 param.BitFlags |= AUTO_GAIN_ON;	// Set flag
-      else
-	 param.BitFlags &= ~(AUTO_GAIN_ON);	// Clear flag
-      SaveSettings();
-   }
-#endif
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.Sensitivity);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData >	100)
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.Sensitivity = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40008                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40008               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40008(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.WallZone);
-   }
-   else
-   {
-      param.WallZone = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;	// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40009                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40009               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40009(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.CellLimit);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData >	50)
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.CellLimit = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40010                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40010               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40010(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.Gmin);
-   }
-   else
-   {
-      param.Gmin = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;		// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40011                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40011               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40011(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.Gmax);
-   }
-   else
-   {
-      param.Gmax = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;			// Advance pointer to keep it correct
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40012                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40012               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40012(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.History);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData >	250)
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.History = *pRegData;	// Save new data
-	 if(param.History == 0)
-	    param.History = 1;	// Check for zero
-	 SetHistory(param.History);
-	 SaveSettings();
-      }
-      ++pRegData;		// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40013                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40013               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40013(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.SpeedSound);
-   }
-   else
-   {
-      param.SpeedSound = GetWord(pRegData);		// Get word value
-      BuildRangeTable();	// Rebuild speed table
-      SaveSettings();
-      pRegData += 2;		// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40014                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40014               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40014(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.GainIncrement);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if((*pRegData < 1) || (*pRegData >	50))
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.GainIncrement = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;		// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40015                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40015               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40015(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.WallZoneAG);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData >	100)
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.WallZoneAG = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40016                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40016               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40016(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.AGSetPoint);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData >	50)
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.AGSetPoint = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40017                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40017               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40017(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.GainBand);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if((*pRegData < 5) || (*pRegData >	30))
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.GainBand = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40018                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40018               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40018(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.SetPoint4ma);
-   }
-   else
-   {
-      param.SetPoint4ma = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;			// Advance pointer to keep it correct
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40019                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40019               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40019(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.SetPoint20ma);
-   }
-   else
-   {
-      param.SetPoint20ma = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40020                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40020               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40020(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.EchoLossAction);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData >	4)
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.EchoLossAction = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;		// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40021                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40021               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40021(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.EchoDelay);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      param.EchoDelay = *pRegData;	// Save new data
-      SaveSettings();
-      ++pRegData;			// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40022                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40022               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40022(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.LoopMin);
-   }
-   else
-   {
-      param.LoopMin = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;			// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40023                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40023               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40023(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.LoopMax);
-   }
-   else
-   {
-      param.LoopMax = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;			// Advance pointer to keep it correct
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40024                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40024               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40024(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(iGainAdjust);
-   }
-   else
-   {
-      if((param.BitFlags & AUTO_GAIN_BIT) == AUTO_GAIN_OFF)	// If auto Gain is off
-	 iGainAdjust = GetWord(pRegData);		// Get word value
-      else
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      pRegData += 2;			// Advance pointer to keep it correct
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40025                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40025               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40025(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.PingDelay);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData > 100)	// If invalid data
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.PingDelay = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40026                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40026               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40026(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.UpdateRate);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData > 20)	// If invalid data
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.UpdateRate = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;		// Advance Pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40027                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40027               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40027(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.Smoothing);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData > 25)	// If invalid data
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.Smoothing = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40028                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40028               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40028(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.DeltaSmoothing);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData > 25)	// If invalid data
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.DeltaSmoothing = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40029                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40029               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40029(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.WiperDelay);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData >	240)
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.WiperDelay = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;		// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40030                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40030               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40030(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.Algorithum);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData > 1)	// If invalid data
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.Algorithum = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40031                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40031               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40031(void)
 
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(iGainBandMidPoint);
-   }
-   else
-   {
-      iGainBandMidPoint = GetWord(pRegData);		// Get word value
-      pRegData += 2;			// Advance pointer to keep it correct
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40032                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40032               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40032(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(param.UnitAddress);
-   }
-   else
-   {
-      ++pRegData;			// Skip first byte - always 0
-      if(*pRegData > 240)	// If invalid data
-	 bMbError = 0x03;		// Error Code 3 - Data not valid
-      else
-      {
-	 param.UnitAddress = *pRegData;	// Save new data
-	 SaveSettings();
-      }
-      ++pRegData;			// Move to next byte for subsequent registers
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40033                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40033               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40033(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0x00);
-      SendByte(bRange);
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40034                           				*
- *    Change Info:   06/23/09                                         *
- *    Description:   Process request for Register 40034               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40034(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.TurbLoopMin);
-   }
-   else
-   {
-      param.TurbLoopMin = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;			// Advance pointer to keep it correct
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40035                           				*
- *    Change Info:   06/23/09                                         *
- *    Description:   Process request for Register 40035               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40035(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(param.TurbLoopMax);
-   }
-   else
-   {
-      param.TurbLoopMax = GetWord(pRegData);		// Get word value
-      SaveSettings();
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40036                           				*
- *    Change Info:   06/23/09                                         *
- *    Description:   Process request for Register 40036               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40036(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & TURBIDITY_INSTALLED)
-	 SendWord(iNTU);
-      else
-	 SendWord(0x00);	// Return 0 if no turbidity installed
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40037                           				*
- *    Change Info:   09/16/08                                         *
- *    Description:   Process request for Register 40037               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40037(void)
-{
-   X_INT	iVal;
-   float	fVal;
 
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      switch(param.Units)
-      {		/* Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches */
-	 case UNITS_INCH:
-	    fVal = (fTrackMeasurement *10000)/param.TankDepth;	/* Convert to 0-10000 for AGM DC */
-	    break;							 /*param.TankDepth = in or cm*/
-	 case UNITS_METER:
-	    fVal = ((fTrackMeasurement *2.54) *10000)/param.TankDepth;	/* Convert to 0-10000 for AGM DC */
-	    break;									 /*param.TankDepth = in or cm*/
-	 case UNITS_CM:
-	    fVal = ((fTrackMeasurement *2.54)*10000)/param.TankDepth;	/* Convert to 0-10000 for AGM DC */
-	    break;									/*param.TankDepth = in or cm*/
-	 case UNITS_FEET:
-	 default:
-	    fVal = (fTrackMeasurement *10000)/param.TankDepth;	/* Convert to 0-10000 for AGM DC */
-	    break;							 /*param.TankDepth = in or cm*/
-      }
-      iVal = fVal;	// Get integer portion
-      if(modf(fVal,&fVal) >= 0.50) ++iVal;	// Round value
-      SendWord(iVal);
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40038                           				*
- *    Change Info:   03/10/10                                         *
- *    Description:   Process request for Register 40038               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40038(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & TURBIDITY_INSTALLED)
-	 SendWord(7000);	// Return Turbidity Sensor Wattage (7000 mW)
-      else if(param.BitFlags & WIPER_INSTALLED)
-	 SendWord(6000);	// Return Wiper Sensor Wattage (6000 mW)
-      else
-	 SendWord(5000);	// Return Standard Sensor Wattage (5000 mW)
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40039                           				*
- *    Change Info:   03/10/10                                         *
- *    Description:   Process request for Register 40039               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40039(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendWord(iWiperMotorVolt);
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-#if(1)	/* To save code space unused registers are mapped in MB_REG_MAP[] to MB_Reg40039() which is also unused */
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40040                           				*
- *    Change Info:   03/10/10                                         *
- *    Description:   Process request for Register 40040               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40040(void)
-{
-   // Future nothing to do
-   MB_Reg40039();
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40041                           				*
- *    Change Info:   03/10/10                                         *
- *    Description:   Process request for Register 40041               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40041(void)
-{
-   // Future nothing to do
-   MB_Reg40039();
-}
-#endif
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40042                           				*
- *    Change Info:   03/10/10                                         *
- *    Description:   Process request for Register 40042               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40042(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0); /* filler */
-      SendByte(param.HWID); /* Add HW ID */
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40043                           			 *
- *    Change Info:   03/10/10                                         *
- *    Description:   Process request for Register 40043               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40043(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(0); /* filler */
-      SendByte(FW_VERSION); /* Add FW Version */
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40044                           			 *
- *    Change Info:   06/01/10                                         *
- *    Description:   Process request for Register 40044               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40044(void)
-{
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      if(param.BitFlags & TURBIDITY_INSTALLED)
-	 SendWord(iNTU*2);
-      else
-	 SendWord(0x00);	// Return 0 if no turbidity installed
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer
-   }
-}
 
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40045                           			 *
- *    Change Info:   06/01/10                                         *
- *    Description:   Process request for Register 40045               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40045(void)
-{
-   X_INT	iVal;
-   X_FLOAT	fVal;
 
-   if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      switch(param.Units)
-      {		/* Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches */
-	 case UNITS_INCH:
-	    fVal = (fDensity) * 10;	/* Convert to 10 * inch measurement */
-	    break;
-	 case UNITS_METER:
-	    fVal = (fDensity * 2.54);	/* Convert to 10 * meter measurement */
-	    break;
-	 case UNITS_CM:
-	    fVal = (fDensity * 25.4);	/* Convert to 10 * cm measurement */
-	    break;
-	 case UNITS_FEET:
-	 default:
-	    fVal = (fDensity *10)/12;	/* Convert to 10 * ft measurement */
-	    break;
-      }
-      iVal = fVal;	// Get integer portion
-      if(modf(fVal,&fVal) >= 0.50) ++iVal;	// Round value
-      SendWord(iVal);
-   }
-   else
-   {
-      bMbError = 0x01;		// Error Code 1 - Write not allowed
-      pRegData += 2;			// Advance pointer to keep it correct
-   }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*********************************************************************
  *                                                                    *

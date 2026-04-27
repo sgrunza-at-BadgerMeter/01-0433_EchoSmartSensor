@@ -170,6 +170,9 @@ void
 
       tx_thread_sleep( 10 );	// place-holder until final logic is in place
 
+      // Should periodically check if the saved configuration matches the current configuration
+      // Update the saved configuration if necessary
+
    } // end of while(1)
 
    return;
