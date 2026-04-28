@@ -27,15 +27,15 @@
 #define MODBUS_SLAVE_ID			0x11	/* Function CDode 17 */
 
 /* Defined ModBus Registers */
-#define	SENSOR_NAME_MB_REG_START	40100
-#define SENSOR_NAME_MB_REG_STOP		40111
+#define	SENSOR_NAME_MB_REG_START	40101
+#define SENSOR_NAME_MB_REG_STOP		40112
 
-#define SENSOR_SN_MB_REG_START		40112
-#define SENSOR_SN_MB_REG_STOP		40117
+#define SENSOR_SN_MB_REG_START		40113
+#define SENSOR_SN_MB_REG_STOP		40118
 
 
-#define WAVEFORM_MB_REG_START		40200
-#define WAVEFORM_MB_REG_STOP		40711
+#define WAVEFORM_MB_REG_START		40201
+#define WAVEFORM_MB_REG_STOP		40712
 
 // NOTE: USERDATA1 through USERDATA4 were for an OEM customer
 // with whom Badger Meter is not partnered at this time.  This
@@ -139,7 +139,7 @@ typedef struct MB_COIL_CMD_T
    COIL_CMD_T	function;
 } MB_COIL_CMD_T;
 
-typedef uint16_t (*REG_CMD_T)(uint16_t reg, bool isWrite, uint16_t val, int16_t *errCode );
+typedef int16_t (*REG_CMD_T)(uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
 typedef struct MB_REG_CMD_T
 {
@@ -252,61 +252,63 @@ void MB_WriteMultReg(void);
 void MB_Diag(void);
 void MB_SlaveID(void);
 
-int16_t MB_Reg40001( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40002( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40003( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40004( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40005( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40006( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40007( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40008( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40009( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40010( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_Reg40001( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40002( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40003( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40004( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40005( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40006( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40007( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40008( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40009( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40010( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
-int16_t MB_Reg40011( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40012( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40013( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40014( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40015( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40016( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40017( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40018( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40019( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40020( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_Reg40011( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40012( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40013( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40014( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40015( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40016( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40017( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40018( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40019( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40020( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
-int16_t MB_Reg40021( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40022( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40023( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40024( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40025( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40026( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40027( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40028( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40029( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40030( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_Reg40021( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40022( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40023( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40024( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40025( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40026( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40027( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40028( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40029( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40030( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
-int16_t MB_Reg40031( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40032( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40033( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40034( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40035( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40036( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40037( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40038( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_Reg40031( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40032( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40033( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40034( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40035( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40036( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40037( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40038( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40039( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
-int16_t MB_Reg40042( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40043( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40044( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg40045( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
 
-int16_t MB_Reg40100( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_Reg40042( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40043( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40044( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg40045( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
-int16_t MB_Reg40112( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_SensorName( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
-int16_t MB_Reg40200( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_SerialNum( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
-int16_t MB_Reg50000( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
-int16_t MB_Reg50001( uint16_t reg, bool isWrite, int16_t val, uint16_t *errCode );
+int16_t MB_Waveform( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+
+int16_t MB_Reg50000( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
+int16_t MB_Reg50001( uint16_t reg, bool isWrite, int16_t val, int16_t *errCode );
 
 #ifndef _MODBUS_C_
 extern
@@ -347,21 +349,30 @@ MB_REG_CMD_T	reg_commands[]
 	 { 40029, MB_Reg40029 },
 	 { 40030, MB_Reg40030 },
 
-	 { 40041, MB_Reg40031 },
-	 { 40042, MB_Reg40032 },
-	 { 40043, MB_Reg40033 },
-	 { 40044, MB_Reg40034 },
-	 { 40045, MB_Reg40035 },
+	 { 40031, MB_Reg40031 },
+	 { 40032, MB_Reg40032 },
+	 { 40033, MB_Reg40033 },
+	 { 40034, MB_Reg40034 },
+	 { 40035, MB_Reg40035 },
+	 { 40036, MB_Reg40036 },
+	 { 40037, MB_Reg40037 },
+	 { 40038, MB_Reg40038 },
+	 { 40039, MB_Reg40039 },
 
-	 { SENSOR_NAME_MB_REG_START, MB_Reg40100 },	// Sensor Name 1 of 12
+	 { 40042, MB_Reg40042 },
+	 { 40043, MB_Reg40043 },
+	 { 40044, MB_Reg40044 },
+	 { 40045, MB_Reg40045 },
 
-	 { SENSOR_SN_MB_REG_START, MB_Reg40112 },	// Serial number 1 of 6
+	 { SENSOR_NAME_MB_REG_START, MB_SensorName },	// Sensor Name 1 of 12
+
+	 { SENSOR_SN_MB_REG_START, MB_SerialNum },	// Serial number 1 of 6
 
 	 //{ USERDATA1_MB_REG_START, MB_Reg40118 },	// User Spific data 1
 
 	 //{ USERDATA2_MB_REG_START, MB_Reg40126 },	// User Spific data 2
 
-	 { WAVEFORM_MB_REG_START, MB_Reg40200 },	// Waveform data[0, 511]
+	 { WAVEFORM_MB_REG_START, MB_Waveform },	// Waveform data[0, 511]
 
 	 //{ USERDATA3_MB_REG_START, MB_Reg40801 },	// User Specific Data 3 x 32-bit array
 

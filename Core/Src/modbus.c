@@ -26,6 +26,8 @@
 #include "main.h"
 #include "modbus.h"
 #include "config.h"
+#include "version.h"
+#include "system_io.h"
 
 //*********************************************************************
 uint16_t modbus_reg_first_reg( MODBUS_ADU_T *msg )
@@ -898,7 +900,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;;
    float		fVal;
@@ -912,21 +914,21 @@ int16_t
 	 {
 	    // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
 	    case UNITS_INCH:
-	       fVal = (fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
+	       fVal = (SSP_status.fTrackMeasurement) * 10;	/* Convert to 10 * inch measurement */
 	       break;
 	    case UNITS_METER:
-	       fVal = (fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
+	       fVal = (SSP_status.fTrackMeasurement * 2.54);	/* Convert to 10 * meter measurement */
 	       break;
 	    case UNITS_CM:
-	       fVal = (fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
+	       fVal = (SSP_status.fTrackMeasurement * 25.4);	/* Convert to 10 * cm measurement */
 	       break;
 	    case UNITS_FEET:
 	    default:
-	       fVal = (fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
+	       fVal = (SSP_status.fTrackMeasurement *10)/12;	/* Convert to 10 * ft measurement */
 	       break;
 	 }
 	 value = (int16_t) fVal;		// Get integer portion
-	 if( modf(fVal,&fVal) >= 0.50 )
+	 if( modff(fVal,&fVal) >= 0.50 )
 	 {
 	    ++value;
 	 }
@@ -961,7 +963,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1013,7 +1015,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1059,7 +1061,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1102,7 +1104,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1154,7 +1156,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1200,7 +1202,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1249,7 +1251,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1293,7 +1295,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1342,7 +1344,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1384,7 +1386,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1423,7 +1425,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1472,7 +1474,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1514,7 +1516,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1561,7 +1563,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1609,7 +1611,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1654,7 +1656,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1707,7 +1709,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1761,7 +1763,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1805,7 +1807,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1852,7 +1854,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1890,7 +1892,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1928,7 +1930,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -1969,7 +1971,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2026,7 +2028,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2074,7 +2076,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2119,7 +2121,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2163,7 +2165,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2209,7 +2211,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2257,7 +2259,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2304,7 +2306,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2349,7 +2351,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2401,7 +2403,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2438,7 +2440,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2476,7 +2478,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2516,7 +2518,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
    int16_t		value = val;
 
@@ -2562,9 +2564,10 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
-   int16_t		i16Val;
+   int16_t		i16Val = val;
+
    float		fVal;
 
 
@@ -2580,30 +2583,28 @@ int16_t
 	 {
 	    // Assumes that fTrackMeasurement is already calibrated for Level/range and is in inches
 	    case UNITS_INCH:
-	       fval = (SSP_status.fTrackMeasurement * 10000) / SSP_configuration.tankDepth;
+	       fVal = (SSP_status.fTrackMeasurement * 10000) / SSP_configuration.tankDepth;
 	       break;
 
 	    case UNITS_METER:
-	       fval = (SSP_status.fTrackMeasurement * 2.54 * 10000) / SSP_configuration.tankDepth;
+	       fVal = (SSP_status.fTrackMeasurement * 2.54 * 10000) / SSP_configuration.tankDepth;
 	       break;
 
 	    case UNITS_CM:
-	       fval = (SSP_status.fTrackMeasurement * 2.54 * 10000) / SSP_configuration.tankDepth;
+	       fVal = (SSP_status.fTrackMeasurement * 2.54 * 10000) / SSP_configuration.tankDepth;
 	       break;
 
 	    case UNITS_FEET:
 	    default:
-	       fval = (SSP_status.fTrackMeasurement * 10000) / SSP_configuration.tankDepth;
+	       fVal = (SSP_status.fTrackMeasurement * 10000) / SSP_configuration.tankDepth;
 	       break;
 	 }
 
 	 i16Val = fVal;
-	 if( modf( fVal, &fVal ) >= 0.50 )
+	 if( modff( fVal, &fVal ) >= 0.50 )
 	 {
 	    ++i16Val;
 	 }
-
-	 value = i16Val;
       }
       else
       {
@@ -2612,7 +2613,7 @@ int16_t
       }
    }
 
-   return( value );
+   return( i16Val );
 } // end of MB_Reg40037()
 
 //*********************************************************************
@@ -2630,7 +2631,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
 
    int16_t		value = val;
@@ -2641,7 +2642,7 @@ int16_t
       {
 	 // This is a read
 	 *errCode = MBUS_RESPONSE_OK;
-	 value = SYS_POWER_VAL;
+	 value = SYS_POWER_BASE_VAL;
 
 	 if( SSP_configuration.hasTurbidity )
 	 {
@@ -2675,7 +2676,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
 
    int16_t		value = val;
@@ -2711,7 +2712,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
 
    int16_t		value = val;
@@ -2747,7 +2748,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
 
    int16_t		value = val;
@@ -2786,7 +2787,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
 
    int16_t		value = val;
@@ -2834,7 +2835,7 @@ int16_t
       uint16_t 		reg,
       bool 		isWrite,
       int16_t 		val,
-      uint16_t		*errCode )
+      int16_t		*errCode )
 {
 
    int16_t		value = val;
@@ -2869,91 +2870,119 @@ int16_t
 	 }
 
 	 value = fVal;	// Get integer portion
-	 if( modf(fVal,&fVal) >= 0.50 )
+	 if( modff(fVal,&fVal) >= 0.50 )
 	 {
 	    ++value;	// Round value
 	 }
-
-	 else
-	 {
-	    // This is a write to a read-only register
-	    *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
-	 }
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
       }
    }
 
    return( value );
 } // end of MB_Reg40045()
 
+//*********************************************************************
+//* Sensor Name (Registers 40101 – 40112)
+//*
+//* The Sensor Name is contained in a series of twelve (12) successive
+//* registers. Each register contains two ASCII characters.
+//*
+//* Read / Write
+//*********************************************************************
+int16_t
+   MB_SensorName(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      int16_t		*errCode )
+{
+
+   int16_t		retVal = 0;
+   uint16_t		twoChars;
+   uint8_t		index;
 
 
+   if( errCode != NULL )
+   {
+      *errCode = MBUS_RESPONSE_OK;
+
+      index = reg - SENSOR_NAME_MB_REG_START;
+
+      // each register is two ASCII characters
+      index = index * 2;
+
+      if( !isWrite )
+      {
+	 // This is a read
+	 twoChars = (uint16_t)(SSP_configuration.name[index] << 8);
+	 twoChars = (uint16_t)twoChars | (uint8_t)SSP_configuration.name[index+1];
+	 retVal = twoChars;
+      }
+      else
+      {
+	 // This is a write
+	 SSP_configuration.name[index] = val >> 8;
+	 SSP_configuration.name[index+1] = val & 0xFF;
+      }
+   }
+
+   return( retVal );
+} // end of MB_SensorName()
+
+//*********************************************************************
+//* Serial Number (Registers 40113 – 40118)
+//*
+//* The sensor Serial Number is contained in a series of six (6)
+//* successive registers. Each register contains two ASCII characters.
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_SerialNum(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      int16_t		*errCode )
+{
+
+   int16_t		retVal = 0;
+   uint16_t		twoChars;
+   uint8_t		index;
+
+
+   if( errCode != NULL )
+   {
+      *errCode = MBUS_RESPONSE_OK;
+
+      index = reg - SENSOR_SN_MB_REG_START;
+
+      // each register is two ASCII characters
+      index = index * 2;
+
+      if( !isWrite )
+      {
+	 // This is a read
+	 twoChars = (uint16_t)(SSP_configuration.serialNum[index] << 8);
+	 twoChars = (uint16_t)twoChars | (uint8_t)SSP_configuration.serialNum[index+1];
+	 retVal = twoChars;
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( retVal );
+} // end of MB_SerialNum()
 
 #if 0
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Diag					                           *
- *    Change Info:   06/23/08                                         *
- *    Description:   Decodes FC 8 Cmd                                 *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Diag(void)
-{
-   GetFirstReg();	// wFirstReg now has sub function
-   if((bMbFlags & MB_LISTEN_ONLY) && (wFirstReg != 1))
-      return;	// Listen only mode - no respose except sub function 1
-   switch (wFirstReg)
-   {
-      case 1:	// Restart comm
-      case 10:	//Clear all counters
-	 wBusMsgCount = 0;
-	 wSlaveMsgCount = 0;
-	 wCRCCount = 0;
-	 if(!(bMbFlags & MB_LISTEN_ONLY) || (wFirstReg == 10))
-	 {
-	    GetTxBufMin(MODBUS_DIAG);		// Return response
-	    SendWord(wFirstReg);
-	    SendWord(0);
-	 }
-	 if(wFirstReg == 1)
-	    bMbFlags &= ~(MB_LISTEN_ONLY);
-	 break;
-      case 4:	// Force Listen only mode
-	 bMbFlags |= MB_LISTEN_ONLY;
-	 break;
-      case 11: // Return Bus Message Count
-	 GetTxBufMin(MODBUS_DIAG);		// Return response
-	 SendWord(wFirstReg);
-	 SendWord(wBusMsgCount);
-	 break;
-      case 12: // Return CRC Count
-	 GetTxBufMin(MODBUS_DIAG);		// Return response
-	 SendWord(wFirstReg);
-	 SendWord(wCRCCount);
-	 break;
-      case 14: // Return Slave Message Count
-	 GetTxBufMin(MODBUS_DIAG);		// Return response
-	 SendWord(wFirstReg);
-	 SendWord(wSlaveMsgCount);
-	 break;
-      case 13: // Return Bus Exception Count
-      case 15: // Return Slave no response message Count
-      case 16: // Return Slave NAK Message Count
-      case 17: // Return Slave Busy Message Count
-      case 18: // Return Character overrun Message Count
-	 GetTxBufMin(MODBUS_DIAG);		// Return response
-	 SendWord(wFirstReg);
-	 SendWord(0);
-	 break;
-      default:
-	 GetTxBufMin(MODBUS_DIAG | 0x80);		// Return response with error
-	 SendByte((uchar)0x01);		// Return exception code 1 - illegal function
-	 break;
-   }
-   SendCS();             /* Compute CS and add to buffer */
-   SendDataNow();        /* Send it */
-}
+
+This code is part of an OEM specific variant no longer built or supported
 
 /*********************************************************************
  *                                                                    *
@@ -2980,260 +3009,136 @@ void MB_SlaveID(void)
    SendCS();             /* Compute CS and add to buffer */
    SendDataNow();        /* Send it */
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40101                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40101               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40101(uchar bReg)		// Sensor Name
-{
-   if(bReg > MAX_NAME_LEN)
-      bMbError = 0x02;		// Error Code 2 - Address not valid
-   else if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(param.Name[bReg * 2]);
-      SendByte(param.Name[(bReg * 2) + 1]);
-   }
-   else
-   {
-      param.Name[bReg * 2] = *pRegData++;	// Get first character
-      param.Name[(bReg * 2) + 1] = *pRegData++;	// Save new data
-      SaveSettings();
-   }
-}
-
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40113                           				*
- *    Change Info:   03/10/10                                         *
- *    Description:   Process request for Register 40113               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40113(uchar bReg)		// Sensor Serial Number
-{
-   X_BYTE cBuf[12];		// temp storage
-   X_BYTE uTmp;
-   X_WORD iSN;
-
-   //	sprintf(cBuf,"%0d",param.SN);	// format string - insufficient space for sprintf
-   // using alternate method of generating number in ASCII form
-   iSN = param.SN;
-   for(uTmp = 0 ; uTmp < 12 ; ++uTmp)	// fill buffer with zeros
-      cBuf[uTmp] = '0';
-   uTmp = iSN/10000;	// get 10,000's nbr
-   // note string is inserted in memory with last element in MSB so that
-   // ModBus commands display string correctly
-   cBuf[7] = uTmp + 0x30;	// convert to ASCII
-   iSN -= (unsigned int)uTmp * 10000;						// subtract
-   uTmp = iSN/1000;	// get 1,000's nbr
-   cBuf[8] = uTmp + 0x30;	// convert to ASCII
-   iSN -= (unsigned int)uTmp * 1000;						// subtract
-   uTmp = iSN/100;	// get 100's nbr
-   cBuf[9] = uTmp + 0x30;	// convert to ASCII
-   iSN -= (unsigned int)uTmp * 100;						// subtract
-   uTmp = iSN/10;	// get 10's nbr
-   cBuf[10] = uTmp + 0x30;	// convert to ASCII
-   iSN -= (unsigned int)uTmp * 10;						// subtract
-   cBuf[11] = iSN + 0x30;	// get 1's nbr and convert to ASCII
-   if(bReg > 6)
-      bMbError = 0x02;		// Error Code 2 - Address not valid
-   else if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(cBuf[bReg * 2]);
-      SendByte(cBuf[(bReg * 2) + 1]);
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-      pRegData += 2;			// Advance pointer
-   }
-}
-
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40118                           				*
- *    Change Info:   10/19/10                                         *
- *    Description:   Process request for Register 40118               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40118(uchar bReg)		// User Specific Data - Field 1.
-{
-   if(bReg > MAX_USER_DATA_FIELD1)
-      bMbError = 0x02;		// Error Code 2 - Address not valid
-   else if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(param.UserData_Field1[bReg * 2]);
-      SendByte(param.UserData_Field1[(bReg * 2) + 1]);
-   }
-   else
-   {
-      param.UserData_Field1[bReg * 2] = *pRegData++;	// Get first character
-      param.UserData_Field1[(bReg * 2) + 1] = *pRegData++;	// Save new data
-      SaveSettings();
-   }
-
-}
-
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40128                           				*
- *    Change Info:   10/19/10                                         *
- *    Description:   Process request for Register 40118               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40128(uchar bReg)		// User Specific Data - Field 2.
-{
-   if(bReg > MAX_USER_DATA_FIELD2)
-      bMbError = 0x02;		// Error Code 2 - Address not valid
-   else if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(param.UserData_Field2[bReg * 2]);
-      SendByte(param.UserData_Field2[(bReg * 2) + 1]);
-   }
-   else
-   {
-      param.UserData_Field2[bReg * 2] = *pRegData++;	// Get first character
-      param.UserData_Field2[(bReg * 2) + 1] = *pRegData++;	// Save new data
-      SaveSettings();
-   }
-}
-
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40201                           				*
- *    Change Info:   06/23/08                                         *
- *    Description:   Process request for Register 40201               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40201(uint bReg)	// Waveform Data
-{
-   if(bReg >= SAMPLES_IN_WAVEFORM/2)
-      bMbError = 0x02;		// Error Code 2 - Address not valid
-   else if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(SavedRawWF[bReg*2]);		// Return Echo Data
-      SendByte(SavedRawWF[bReg*2 + 1]);		// Return Echo Data
-   }
-   else
-   {
-      bMbError = 0x03;		// Error Code 3 - Data not valid	 - Read Only
-      pRegData += 2;			// Advance pointer
-   }
-   if(bitEnablePing == 0)			/* If Ping is disabled */
-      EnablePinTimeOutSec = ENABLE_PING_TIMEOUT;	/* Reset Timer */
-}
-
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40801                           				*
- *    Change Info:   10/19/10                                         *
- *    Description:   Process request for Register 40801               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40801(uchar bReg)		// User Specific Data Field 3 (3x32 array)
-{
-   if(bReg > MAX_USER_DATA_FIELD3)
-      bMbError = 0x02;		// Error Code 2 - Address not valid
-   else if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(param.UserData_Field3[bReg * 2]);
-      SendByte(param.UserData_Field3[(bReg * 2) + 1]);
-   }
-   else
-   {
-      param.UserData_Field3[bReg * 2] = *pRegData++;	// Get first character
-      param.UserData_Field3[(bReg * 2) + 1] = *pRegData++;	// Save new data
-      SaveSettings();
-   }
-}
-
-/*********************************************************************
- *                                                                    *
- *    Function Name: MB_Req40848                           				*
- *    Change Info:   10/19/10                                         *
- *    Description:   Process request for Register 40901               *
- *    Parameters:    None                                             *
- *    Returns:       None                                             *
- *                                                                    *
- **********************************************************************/
-void MB_Reg40848(uchar bReg)		// User Specific Data Field 4 (8x2 array)
-{
-   if(bReg > MAX_USER_DATA_FIELD4)
-      bMbError = 0x02;		// Error Code 2 - Address not valid
-   else if(bMbFlags & MB_READ_DATA)	// If Read
-   {
-      SendByte(param.UserData_Field4[bReg * 2]);
-      SendByte(param.UserData_Field4[(bReg * 2) + 1]);
-   }
-   else
-   {
-      param.UserData_Field4[bReg * 2] = *pRegData++;	// Get first character
-      param.UserData_Field4[(bReg * 2) + 1] = *pRegData++;	// Save new data
-      SaveSettings();
-   }
-}
-
 #endif
+
+
+//*********************************************************************
+//* Waveform Data (Registers 40201 – 40712)
+//*
+//* Waveform Data exists as a series of 1024 data points. Each data
+//* point is a byte value with a valid range of 0-255. Each register
+//* is a 16-bit value and contains 2 of the 1024 data points. Register
+//* 40200 contains data points 0 & 1 and register 40711 contains data
+//* points 1022 & 1023.
+//*
+//* Note: When reading multiple register values (ModBus Function Code
+//* 03) you can only access a maximum of 15 consecutive registers.
+//*
+//* Prior to reading the Waveform Data registers, the host should
+//* disable the Waveform Acquisition Control bit (4.5.10). Failure
+//* to disable this control will corrupt the data in the Waveform Data
+//* registers. The current status of the waveform data registers can be
+//* determined by reading the Waveform Data Ready coil (4.5.27).
+//*
+//* Read only
+//*********************************************************************
+int16_t
+   MB_Waveform(
+      uint16_t 		reg,
+      bool 		isWrite,
+      int16_t 		val,
+      int16_t		*errCode )
+{
+
+   int16_t		retVal = 0;
+   uint16_t		two_uint8s;
+   uint8_t		index;
+
+
+   if( errCode != NULL )
+   {
+      *errCode = MBUS_RESPONSE_OK;
+
+      index = reg - WAVEFORM_MB_REG_START;
+
+      // each register is two 8-bit samples
+      index = index * 2;
+
+      if( !isWrite )
+      {
+	 // This is a read
+	 two_uint8s = (uint16_t)((SONAR_sample_data[index].sample) & 0xFF << 8);
+	 two_uint8s = (uint16_t)two_uint8s | (uint8_t)(SONAR_sample_data[index+1].sample & 0xFF);
+	 retVal = two_uint8s;
+      }
+      else
+      {
+	 // This is a write to a read-only register
+	 *errCode = MBUS_RESPONSE_ILLEGAL_FUNCTION;
+      }
+   }
+
+   return( retVal );
+} // end of MB_Waveform()
+
+
+//*********************************************************************
+// Diagnostic Function Code 0x80
+//*********************************************************************
+void
+   rs485_diagnostics(
+      MODBUS_ADU_T 		*msg )
+{
+
+   uint8_t		sub_fc;
+
+   if( msg != NULL )
+   {
+      sub_fc = msg->payload[0];
+
+      switch( sub_fc )
+      {
+	 case 1:	// Restart Communications
+	 case 10:	// Clear Counters and Diagnostic register
+	    SSP_status.bus_msg_count = 0;
+	    SSP_status.slave_msg_count = 0;
+
+	    if( sub_fc == 10 )
+	    {
+	       // Build the response message
+		rs485_prepare_tx_buf( msg->address, msg->fc );
+		rs485_add_tx_byte( sub_fc );
+		rs485_transmit_now();	// send the message
+		HAL_Delay( 10 );
+		NVIC_SystemReset();
+	    }
+	    break;
+
+	 case 4:	// Activate listen only mode
+	    // Not supported
+	    break;
+
+	 case 11:	// Return bus message count
+	    rs485_prepare_tx_buf( msg->address, msg->fc );
+	    rs485_add_tx_byte( sub_fc );
+	    rs485_add_tx_byte( (SSP_status.bus_msg_count & 0x0000FF00) >> 8 );
+	    rs485_add_tx_byte( (SSP_status.bus_msg_count & 0x000000FF) );
+	    break;
+
+	 case 12:	// Return bus CRC error count
+	    rs485_prepare_tx_buf( msg->address, msg->fc );
+	    rs485_add_tx_byte( sub_fc );
+	    rs485_add_tx_byte( (SSP_status.bus_crc_err_count & 0x0000FF00) >> 8 );
+	    rs485_add_tx_byte( (SSP_status.bus_crc_err_count & 0x000000FF) );
+	    break;
+
+	 case 14:	// return slave message count
+	    rs485_prepare_tx_buf( msg->address, msg->fc );
+	    rs485_add_tx_byte( sub_fc );
+	    rs485_add_tx_byte( (SSP_status.slave_msg_count & 0x0000FF00) >> 8 );
+	    rs485_add_tx_byte( (SSP_status.slave_msg_count & 0x000000FF) );
+	    break;
+
+	 default:
+	    rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	    rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_FUNCTION );
+	    break;
+      } // end of switch()
+      rs485_transmit_now();	// send the message
+   }
+
+   return;
+} // end of rs485_diagnostics()
+
 
 // end of file modbus.c

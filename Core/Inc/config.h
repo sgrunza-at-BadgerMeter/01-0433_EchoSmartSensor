@@ -24,7 +24,7 @@ extern CRC_HandleTypeDef hcrc;
 // TODO:  Refine this power level
 #define SYS_POWER_BASE_VAL		5000
 #define SYS_POWER_TURB_VAL		1000
-#define SYS_POWER_WIPRE_VAL		1000
+#define SYS_POWER_WIPER_VAL		1000
 
 typedef enum CFG_LOAD_TYPE_E
 {
@@ -58,8 +58,8 @@ typedef enum CFG_LOAD_TYPE_E
 #define DEFAULT_CELL_LIMIT	1
 #define DEFAULT_DELTA_Y		10		// Delay Y Coeff - percentage
 #define DEFAULT_HISTORY		130
-#define DEFAULT_GATE_MIN	(TANK_DEPTH_INCR_FT * 2)	// 2 Foot from track
-#define DEFAULT_GATE_MAX	(TANK_DEPTH_INCR_FT * 2)	// 2 Foot from track
+#define DEFAULT_LGATE_MIN	(TANK_DEPTH_INCR_FT * 2)	// 2 Foot from track
+#define DEFAULT_RGATE_MIN	(TANK_DEPTH_INCR_FT * 2)	// 2 Foot from track
 #define DEFAULT_SOUND_SPEED	4862		// Speed in Ft per second
 #define DEFAULT_GAIN_INCREMENT	1		// Amount of change in auto gain * 10
 #define DEFAULT_WALLZONE_AG	40		// Percentage of auto gain in wall zone
@@ -86,6 +86,10 @@ typedef enum CFG_LOAD_TYPE_E
 #define DEFAULT_NAME			"Sensor Name"
 #define DEFAULT_NAME_LEN		strlen(DEFAULT_NAME)
 #define MAX_NAME_LEN			24
+
+#define DEFAULT_SN			"Default SN"
+#define DEFAULT_SN_LEN			strlen(DEFAULT_SN)
+#define MAX_SN_LEN			12
 
 /******* Bit Definitions for bTrackStatus ****/
 #define LOOKING_RIGHT		0x01	/* Track is moving right */
@@ -151,7 +155,6 @@ typedef struct SSP_CONFIG_UUID_T
  */
 typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
 {
-   uint16_t		serialNumber;		///< Serial number
    uint8_t		hw_id;			///< Hardware ID
    uint8_t		fw_ver;			///< Firmware version
    SSP_CFG_EQIP_E	eq_type;		///< equipment type
@@ -198,7 +201,8 @@ typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
    uint16_t		levelLoopMax;		///< value that provides 20mA loop current (12-bits)
    int16_t		minGain;		///< value for DAC to have minimum gain on signal amp
    int16_t		maxGain;		///< value for DAC to have maximum gain on signal amp
-   char			name[ MAX_NAME_LEN ];
+   char			name[ MAX_NAME_LEN ];	///< not NULL terminated
+   char			serialNum[ MAX_SN_LEN ];///< not NULL terminated
    uint16_t		turbLoopMin;		///< value that provides 4mA loop current (12-bits) (AuxLoop)
    uint16_t		turbLoopMax;		///< value that provides 20mA loop current (12-bits) (AuxLoop)
 
@@ -278,6 +282,7 @@ typedef struct SSP_STATUS_T
 
    uint32_t		bus_msg_count;		///< number of RS485 messages received
    uint32_t		slave_msg_count;	///< number of RS485 messages received for this device
+   uint32_t		bus_crc_err_count;	///< number of RS485 messages with bad CRC
 
    float		fTrackMeasurement;	///< Current Track Measurement
    uint16_t		wiperMotorVoltage;	///< wiper motor voltage in mV

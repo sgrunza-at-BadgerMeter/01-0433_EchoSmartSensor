@@ -706,9 +706,31 @@ void rs485_decode_command( MODBUS_ADU_T *msg )
 	    case MODBUS_READ_HOLDING_REG:
 	       rs485_readHoldingReg( msg );
 	       break;
-	 }
-      }
 
+	    case MODBUS_READ_INPUT_REG:
+	       break;
+
+	    case MODBUS_WRITE_COIL:
+	       break;
+
+	    case MODBUS_WRITE_SINGLE_REG:
+	       break;
+
+	    case MODBUS_WRITE_MULT_REG:
+	       break;
+
+	    case MODBUS_DIAG:
+	       break;
+
+	    case MODBUS_SLAVE_ID:
+	       break;
+
+	    default:
+	       printf( "unknown function code 0x%2.2x in %s at line %d\r\n",
+			msg->fc, __FILE__, __LINE__ );
+	       break;
+	 } // end of switch( function code )
+      } // end of if not broadcast
    }
 
    return;
@@ -1035,6 +1057,8 @@ void
 
     REG_CMD_T 		regFunction;
 
+    int16_t		errorCode;
+
     firstReg = modbus_reg_first_reg( msg );
     numRegs = modbus_number_of_regs( msg );
 
@@ -1052,18 +1076,23 @@ void
        {
 	  if( firstReg == SENSOR_NAME_MB_REG_START )
 	  {
-	     regResult = MB_Reg40100( reg++, false, false );
+	     regResult = MB_SensorName( reg++, false, false, &errorCode );
 	  }
 	  else if( firstReg == SENSOR_SN_MB_REG_START )
 	  {
-	     regResult = MB_Reg40112( reg++, false, false );
+	     regResult = MB_SerialNum( reg++, false, false, &errorCode );
+	  }
+	  else if( (firstReg >= WAVEFORM_MB_REG_START) &&
+		   (firstReg <= WAVEFORM_MB_REG_STOP) )
+	  {
+	     regResult = MB_Waveform( reg++, false, false, &errorCode );
 	  }
 	  else
 	  {
 	     regFunction = rs485_find_reg_function( reg++ );
 	     if( regFunction != NULL )
 	     {
-		regResult = regFunction( reg++, false, false );
+		regResult = regFunction( reg++, false, false, &errorCode );
 	     }
 	     else
 	     {
@@ -1109,6 +1138,7 @@ void
     uint16_t			wrResult;
     REG_CMD_T 			regFunction;
     MODBUS_ADU_REG_WRITE_T	*m;
+    int16_t			errorCode;
 
     if( msg != NULL )
     {
@@ -1126,13 +1156,13 @@ void
               (m->regAddr <= SENSOR_NAME_MB_REG_STOP) )
 	  {
 	     // use the sensor name function
-	     wrResult = MB_Reg40100( m->regAddr, true, m->regData );
+	     wrResult = MB_SensorName( m->regAddr, true, m->regData, &errorCode );
 	  }
 	  else if( (m->regAddr >= SENSOR_SN_MB_REG_START) &&
 		   (m->regAddr <= SENSOR_SN_MB_REG_STOP) )
 	  {
 	     // use the sensor serial number function
-	     wrResult = MB_Reg40112( m->regAddr, true, m->regData );
+	     wrResult = MB_SerialNum( m->regAddr, true, m->regData, &errorCode );
 	  }
 	  else
 	  {
@@ -1140,7 +1170,7 @@ void
 	     regFunction = rs485_find_reg_function( m->regAddr );
 	     if( regFunction != NULL )
 	     {
-		wrResult = regFunction( m->regAddr, true, m->regData );
+		wrResult = regFunction( m->regAddr, true, m->regData, &errorCode );
 	     }
 	     else
 	     {
@@ -1202,6 +1232,8 @@ void
 
     uint8_t				i;
 
+    int16_t				errorCode;
+
     if( msg != NULL )
     {
        m = (MODBUS_ADU_MULTIREG_WRITE_T *)msg;
@@ -1226,13 +1258,13 @@ void
 		 (regToWrite <= SENSOR_NAME_MB_REG_STOP) )
 	     {
 		// use the sensor name function
-		wrResult = MB_Reg40100( regToWrite, true, dataToWrite );
+		wrResult = MB_SensorName( regToWrite, true, dataToWrite, &errorCode );
 	     }
 	     else if( (regToWrite >= SENSOR_SN_MB_REG_START) &&
 		      (regToWrite <= SENSOR_SN_MB_REG_STOP) )
 	     {
 		// use the sensor serial number function
-		wrResult = MB_Reg40112( regToWrite, true, dataToWrite );
+		wrResult = MB_SerialNum( regToWrite, true, dataToWrite, &errorCode );
 	     }
 	     else
 	     {
@@ -1240,7 +1272,7 @@ void
 		regFunction = rs485_find_reg_function( regToWrite );
 		if( regFunction != NULL )
 		{
-		   wrResult = regFunction( regToWrite, true, dataToWrite );
+		   wrResult = regFunction( regToWrite, true, dataToWrite, &errorCode );
 		   if( wrResult == dataToWrite )
 		   {
 		      bytesWritten += 2;

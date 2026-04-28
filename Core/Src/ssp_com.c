@@ -37,7 +37,18 @@ void
       void )
 {
    int8_t		ret;
+   uint8_t		sn_len;
 
+   sn_len = 0;
+   while( SSP_configuration.serialNum[sn_len] != '\0' )
+   {
+      sn_len++;
+      if( sn_len > MAX_SN_LEN )
+      {
+	 sn_len = MAX_SN_LEN;
+	 break;
+      }
+   }
 
    ret = rs485_prepare_tx_buf(
 	    SSP_configuration.address,
@@ -49,7 +60,16 @@ void
    else
    {
       // Add serial number
-      ret = rs485_add_tx_word( SSP_configuration.serialNumber );
+      int i = 0;
+      while( SSP_configuration.serialNum[i] != '\0' )
+      {
+	 ret = rs485_add_tx_byte( SSP_configuration.serialNum[i] );
+	 i++;
+	 if( sn_len == i )
+	 {
+	    break;
+	 }
+      }
    }
 
    if( ret != RS485_SUCCESS )

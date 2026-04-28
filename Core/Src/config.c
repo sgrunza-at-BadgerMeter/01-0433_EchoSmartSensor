@@ -74,7 +74,6 @@ void
       cfg->hasReedSwitch = 0;
       cfg->hasWiper = 0;
       cfg->hw_id = 0;
-      cfg->serialNumber = 0;	// 16-bit value
       cfg->range = RANGE_5_FT;
       cfg->gainAdjust = 3;
       cfg->uuid.first = HAL_GetUIDw0();
@@ -97,8 +96,8 @@ void
       cfg->wallZone = DEFAULT_WALL_ZONE;
       cfg->settlingZone = DEFAULT_SETTLING_ZONE;
       cfg->cellLimit = DEFAULT_CELL_LIMIT;
-      cfg->gateMin = DEFAULT_GATE_MIN;
-      cfg->gateMax = DEFAULT_GATE_MAX;
+      cfg->lgMin = DEFAULT_LGATE_MIN;
+      cfg->rgMin = DEFAULT_RGATE_MIN;
       cfg->history = DEFAULT_HISTORY;
       cfg->speedSound = DEFAULT_SOUND_SPEED;
       cfg->gainIncrement = DEFAULT_GAIN_INCREMENT;
@@ -118,6 +117,9 @@ void
 
       //cfg->name[]
       memcpy( cfg->name, DEFAULT_NAME, DEFAULT_NAME_LEN );
+
+      //cfg->serialNum[]
+      memcpy( cfg->serialNum, DEFAULT_SN, DEFAULT_SN_LEN );
 
       cfg->turbLoopMin = I_LOOP_MIN;
       cfg->turbLoopMax = I_LOOP_MAX;
@@ -143,8 +145,8 @@ void
       cfg->wallZone = DEFAULT_WALL_ZONE;
       cfg->settlingZone = DEFAULT_SETTLING_ZONE;
       cfg->cellLimit = DEFAULT_CELL_LIMIT;
-      cfg->gateMin = DEFAULT_GATE_MIN;
-      cfg->gateMax = DEFAULT_GATE_MAX;
+      cfg->lgMin = DEFAULT_LGATE_MIN;
+      cfg->rgMin = DEFAULT_RGATE_MIN;
       cfg->history = DEFAULT_HISTORY;
       cfg->gainIncrement = DEFAULT_GAIN_INCREMENT;
       cfg->wallZoneAG = DEFAULT_WALLZONE_AG;
