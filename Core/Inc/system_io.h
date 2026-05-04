@@ -132,12 +132,31 @@ void updateTurbLoop( uint16_t	dacCounts );
 void rs485_readCoil( MODBUS_ADU_T *msg );
 void rs485_decode_command( MODBUS_ADU_T *msg );
 void rs485_network_poll_cmd( MODBUS_ADU_T *msg );
-void rs485_readHoldingReg( MODBUS_ADU_T *msg );
-void rs485_readCoil( MODBUS_ADU_T *msg );
+void rs485_readRegs( MODBUS_ADU_T *msg );	// multiple registers
+void rs485_readReg( MODBUS_ADU_T *msg );	// single register
+void rs485_readCoil( MODBUS_ADU_T *msg );	// one or more coils
 
 COIL_CMD_T
    rs485_find_coil_function(
       uint16_t		coilNum );
+
+void
+   rs485_writeMultipleRegs(
+     MODBUS_ADU_T 	*msg );
+
+void
+  rs485_writeReg(
+     MODBUS_ADU_T 	*msg );
+
+REG_CMD_T
+   rs485_find_reg_function(
+      uint16_t		regNum );
+
+void
+   rs485_writeCoil(
+      MODBUS_ADU_T 	*msg );
+
+
 
 
 #endif /* INC_SYSTEM_IO_H_ */

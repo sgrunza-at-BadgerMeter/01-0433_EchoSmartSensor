@@ -261,6 +261,11 @@ int8_t
       ret = rs485_add_tx_byte( fc );
    }
 
+   if( ret == RS485_SUCCESS )
+   {
+      ret = rs485_add_tx_byte( SAM_RESPONSE );
+   }
+
    return( ret );
 } // end of rs485_prepare_tx_buf()
 
@@ -703,27 +708,73 @@ void rs485_decode_command( MODBUS_ADU_T *msg )
 	       rs485_readCoil( msg );
 	       break;
 
-	    case MODBUS_READ_HOLDING_REG:
-	       rs485_readHoldingReg( msg );
+	    case MODBUS_READ_HOLDING_REG:	// function code 3 -- multiple regs
+	       rs485_readRegs( msg );
 	       break;
 
-	    case MODBUS_READ_INPUT_REG:
+	    case MODBUS_READ_INPUT_REG:		// function code 4
+	       rs485_readReg( msg );
 	       break;
 
-	    case MODBUS_WRITE_COIL:
+	    case MODBUS_WRITE_COIL:		// function code 5
+	       rs485_writeCoil( msg );
 	       break;
 
-	    case MODBUS_WRITE_SINGLE_REG:
+	    case MODBUS_WRITE_SINGLE_REG:	// function code 6
 	       break;
 
-	    case MODBUS_WRITE_MULT_REG:
+	    case MODBUS_WRITE_MULT_REG:		// function code 16
 	       break;
 
-	    case MODBUS_DIAG:
+	    case MODBUS_DIAG:			// function code 08
 	       break;
 
-	    case MODBUS_SLAVE_ID:
+	    case MODBUS_SLAVE_ID:		// function code 17
 	       break;
+
+	    case CMD_ID_REQ:
+
+	    case CMD_EXT_ID_REQ:
+
+	    case CMD_TANK_CFG:
+
+	    case CMD_TRACK_INFO:
+
+	    case CMD_ACOUSTIC_CFG:
+
+	    case CMD_LOOP_CFG:
+
+	    case CMD_WIPER_CFG:
+
+	    case CMD_TURB_CFG:
+
+	    case CMD_ECHO_DATA:
+
+	    case CMD_MANUAL_GAIN:
+
+	    case CMD_ECHO_CONTROL:
+
+	    case CMD_CANDIDATE:
+
+	    case CMD_PROBE_STATUS:
+
+	    case CMD_TRACKING_CFG:
+
+	    case CMD_UNITS:
+
+	    case CMD_FLASH_PARAM:
+
+	    case CMD_MEMORY_ACCESS:
+
+	    case CMD_NETWORK_POLL:
+
+	    case CMD_SET_SN:
+
+	    case CMD_SET_ADDRESS:
+
+	    case CMD_PROGRAM_UPLOAD:
+
+	    case CMD_COMM_FORMAT:
 
 	    default:
 	       printf( "unknown function code 0x%2.2x in %s at line %d\r\n",
@@ -742,26 +793,37 @@ void rs485_decode_command( MODBUS_ADU_T *msg )
  *
  * @param msg - pointer to a msg with a valid CRC
  *
+ * @note - If the message was sent to the network broadcast address
+ * (0x00) then wait 10ms * this units address to respond; otherwise,
+ * respond immediately
+ *
  * @return none
  **********************************************************************
  */
 void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
 {
+
+   uint32_t	responseDelay;	// in ms
+
+   // build an response message
+   rs485_prepare_tx_buf( msg->address, msg->fc );
+
+   if( msg->address == 0x00 )
+   {
+      // This was a broadcast message so wait to respond
+      responseDelay = SSP_configuration.address * 10;
+
+      // Have it in milliseconds, need it in ticks
+      responseDelay = ( responseDelay * TX_TIMER_TICKS_PER_SECOND ) / 1000;
+
+      tx_thread_sleep( responseDelay );
+   }
+
+   // Actually send response
+   rs485_transmit_now();	// send the message
+
    return;
 } // end of rs485_network_poll_cmd()
-
-/*
- **********************************************************************
- * @brief rs485_readHoldingReg()
- *
- * @param msg - pointer to a msg with a valid CRC
- *
- * @return none
- **********************************************************************
- */void rs485_readHoldingReg( MODBUS_ADU_T *msg )
-{
-   return;
-} // end of rs485_readHoldingReg()
 
  /*
   **********************************************************************
@@ -862,73 +924,73 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
    * @return none
    **********************************************************************
    */
- void
-    rs485_writeCoil(
-       MODBUS_ADU_T 	*msg )
-  {
-    uint16_t		coilNumber;
-    bool		result;
-    bool		data;
+void
+   rs485_writeCoil(
+      MODBUS_ADU_T 	*msg )
+{
+   uint16_t		coilNumber;
+   bool		result;
+   bool		data;
 
-    COIL_CMD_T		coilFunction;
+   COIL_CMD_T		coilFunction;
 
 
-    coilNumber = modbus_reg_first_reg( msg );
+   coilNumber = modbus_reg_first_reg( msg );
 
-    // Do some error checks
-    if( coilNumber > NBR_MB_COILS )
-    {
-	// coils requested beyond range
-	// build an error response
-	rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
-	rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
-    }
-    else
-    {
-       // perform the write
-       if( msg->payload[2] )	// fifth byte of message
-       {
-	  data = true;
-       }
-       else
-       {
-	  data = false;
-       }
+   // Do some error checks
+   if( coilNumber > NBR_MB_COILS )
+   {
+      // coils requested beyond range
+      // build an error response
+      rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+      rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
+   }
+   else
+   {
+      // perform the write
+      if( msg->payload[2] )	// fifth byte of message
+      {
+	 data = true;
+      }
+      else
+      {
+	 data = false;
+      }
 
-       coilFunction = rs485_find_coil_function( coilNumber );
-       if( coilFunction != NULL )
-       {
-	  // There is a function for this coil
-	  result = coil_commands[ coilNumber ].function( true, data );	// write command
-       }
-       else
-       {
-	  // No function associated with this coil, return something to create an error msg
-	  result = !data;
-       }
+      coilFunction = rs485_find_coil_function( coilNumber );
+      if( coilFunction != NULL )
+      {
+	 // There is a function for this coil
+	 result = coil_commands[ coilNumber ].function( true, data );	// write command
+      }
+      else
+      {
+	 // No function associated with this coil, return something to create an error msg
+	 result = !data;
+      }
 
-       if( result == data )
-       {
-	  // write was ok
-	  rs485_prepare_tx_buf( msg->address, msg->fc );
-	  rs485_add_tx_byte( msg->payload[0] );	// coil MSB
-	  rs485_add_tx_byte( msg->payload[1] );	// coil LSB
-	  rs485_add_tx_byte( msg->payload[2] );	// 0xFF or 0x00 from msg
-	  rs485_add_tx_byte( 0x00 );
-       }
-       else
-       {
-	  // build an error response
-	  rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
-	  rs485_add_tx_byte( MBUS_RESPONSE_SERVICE_DEVICE_FAILURE ); // code 4
-       }
-    }
+      if( result == data )
+      {
+	 // write was ok
+	 rs485_prepare_tx_buf( msg->address, msg->fc );
+	 rs485_add_tx_byte( msg->payload[0] );	// coil MSB
+	 rs485_add_tx_byte( msg->payload[1] );	// coil LSB
+	 rs485_add_tx_byte( msg->payload[2] );	// 0xFF or 0x00 from msg
+	 rs485_add_tx_byte( 0x00 );
+      }
+      else
+      {
+	 // build an error response
+	 rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	 rs485_add_tx_byte( MBUS_RESPONSE_SERVICE_DEVICE_FAILURE ); // code 4
+      }
+   }
 
-    // Actually send response
-    rs485_transmit_now();	// send the message
+   // Actually send response
+   rs485_transmit_now();	// send the message
 
-    return;
-  } // end of rs485_writeCoil()
+   return;
+} // end of rs485_writeCoil()
 
 //*********************************************************************
 COIL_CMD_T
@@ -1034,7 +1096,7 @@ REG_CMD_T
 
 /*
  **********************************************************************
- * @brief rs485_readReg() puts one or more 16-bit register values into
+ * @brief rs485_readRegs() puts one or more 16-bit register values into
  * the transmit buffer.
  *
  * Decodes FC command 0x03
@@ -1045,7 +1107,7 @@ REG_CMD_T
  **********************************************************************
  */
 void
-  rs485_readReg(
+  rs485_readRegs(
      MODBUS_ADU_T 	*msg )
 {
 
@@ -1115,6 +1177,34 @@ void
 
     // Actually send response
     rs485_transmit_now();	// send the message
+
+    return;
+} // end of rs485_readRegs()
+
+/*
+ **********************************************************************
+ * @brief rs485_readReg() -- single register read is not supported
+ *
+ * Decodes FC command 0x04
+ *
+ * @param msg - pointer to a msg with a valid CRC
+ *
+ * @return none
+ **********************************************************************
+ */
+void
+  rs485_readReg(
+     MODBUS_ADU_T 	*msg )
+{
+
+   // Not supported
+
+   // build an error response
+   rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+   rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_FUNCTION ); // code 1
+
+   // Actually send response
+   rs485_transmit_now();	// send the message
 
     return;
 } // end of rs485_readReg()

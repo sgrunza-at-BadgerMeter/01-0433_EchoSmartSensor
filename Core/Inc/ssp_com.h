@@ -15,6 +15,8 @@
 
 /* Modified to co-exist with ModBus Function Codes. SSP Protocol Uses Function Codes 65-72, 100-119 */
 
+#define SAM_RESPONSE	0x80		/* Bit b7 set to show data is a response */
+
 /**
  * @brief This enumeration holds the function codes for SSP messages
  *

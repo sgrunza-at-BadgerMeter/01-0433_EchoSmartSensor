@@ -162,6 +162,22 @@ void
       memcpy( cfg->name, DEFAULT_NAME, DEFAULT_NAME_LEN );
       cfg->fixedGainBandMidPoint = 135;	///< Magic number
    }
+   else if( type == LOAD_FROM_FLASH )
+   {
+      // This is a load cmd
+      bool		cfgOk;
+
+      cfgOk = cfg_verify_nvconfig( SSP_nvcfg_addr, sizeof(SSP_CONFIG_T) );
+      if( cfgOk )
+      {
+	 memcpy( &SSP_configuration, SSP_nvcfg_addr, sizeof( SSP_CONFIG_T) );
+      }
+      else
+      {
+	 printf( "Flash-based configuration is not valid\r\n" );
+	 cfg_load_default( cfg, LOAD_ALL_SETTINGS );
+      }
+   }
    else
    {
       printf( "Internal logic error in file %s at line %d\r\n", __FILE__, __LINE__ );

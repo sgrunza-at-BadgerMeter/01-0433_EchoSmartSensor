@@ -28,6 +28,7 @@
 #include "config.h"
 #include "version.h"
 #include "system_io.h"
+#include "waveform.h"
 
 //*********************************************************************
 uint16_t modbus_reg_first_reg( MODBUS_ADU_T *msg )
@@ -1492,7 +1493,7 @@ int16_t
 	 // This is a write
 	 *errCode = MBUS_RESPONSE_OK;
 	 SSP_configuration.speedSound = val;
-	 BuildRangeTable();
+	 buildRangeTable( &fRangeResolution[0], SSP_configuration.speedSound );
       }
    }
 
