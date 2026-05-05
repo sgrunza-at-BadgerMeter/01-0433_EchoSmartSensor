@@ -384,6 +384,8 @@ void
    if( ret != HAL_OK )
    {
       // TODO: Error handling
+      printf( "HAL_UART_Transmit_IT() failed in %s in line %d with error %d(0x%x)\r\n",
+	       __FILE__, __LINE__, ret, ret );
    }
 
    return;
@@ -721,15 +723,20 @@ void rs485_decode_command( MODBUS_ADU_T *msg )
 	       break;
 
 	    case MODBUS_WRITE_SINGLE_REG:	// function code 6
+	       rs485_writeReg( msg );
 	       break;
 
 	    case MODBUS_WRITE_MULT_REG:		// function code 16
+	       rs485_writeMultipleRegs( msg );
 	       break;
 
 	    case MODBUS_DIAG:			// function code 08
+	       rs485_diagnostics( msg );
 	       break;
 
 	    case MODBUS_SLAVE_ID:		// function code 17
+	       printf( "Unsuppored function code 0x11 in %s at line %d\r\n",
+			__FILE__, __LINE__ );
 	       break;
 
 	    case CMD_ID_REQ:

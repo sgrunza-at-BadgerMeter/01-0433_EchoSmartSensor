@@ -2940,6 +2940,9 @@ int16_t
 //* The sensor Serial Number is contained in a series of six (6)
 //* successive registers. Each register contains two ASCII characters.
 //*
+//* These registers are filled in from the uint16_t sn field of
+//* the configuration structure
+//*
 //* Read only
 //*********************************************************************
 int16_t
@@ -2954,6 +2957,8 @@ int16_t
    uint16_t		twoChars;
    uint8_t		index;
 
+   char			serialNumString[ MAX_SN_LEN ];
+
 
    if( errCode != NULL )
    {
@@ -2967,8 +2972,9 @@ int16_t
       if( !isWrite )
       {
 	 // This is a read
-	 twoChars = (uint16_t)(SSP_configuration.serialNum[index] << 8);
-	 twoChars = (uint16_t)twoChars | (uint8_t)SSP_configuration.serialNum[index+1];
+	 snprintf( serialNumString, MAX_SN_LEN, "%5.5d", SSP_configuration.sn );
+	 twoChars = (uint16_t)(serialNumString[index] << 8);
+	 twoChars = (uint16_t)twoChars | (uint8_t)serialNumString[index+1];
 	 retVal = twoChars;
       }
       else

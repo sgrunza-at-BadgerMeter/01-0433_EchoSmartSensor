@@ -764,7 +764,7 @@ void cmd_configure( char     *msg )
    int		cmpVal;
 
    char		*c;
-   char		string[MAX_SN_LEN + 1];
+   //char		string[MAX_SN_LEN + 1];
 
    if( msg == NULL )
    {
@@ -798,11 +798,11 @@ void cmd_configure( char     *msg )
    {
       // No more arguments so display current in-RAM config
 
-      strncpy( string, SSP_configuration.serialNum, MAX_SN_LEN );
+      //strncpy( string, SSP_configuration.serialNum, MAX_SN_LEN );
 
       printf( "\r\n" );
       printf( "configuration structure holds:\r\n" );
-      printf( "\tserialNumber:\t%s\r\n", string );
+      printf( "\tserialNumber:\t%d\r\n", SSP_configuration.sn );
       printf( "\thw_id:       \t%d\r\n", SSP_configuration.hw_id );
       printf( "\tfw_ver:      \t%d\r\n", SSP_configuration.fw_ver );
       printf( "\teq_type:     \t%s(%d)\r\n",
@@ -1108,7 +1108,8 @@ void cmd_configure( char     *msg )
 	       c++;
 	    }
 
-	    strncpy( SSP_configuration.serialNum, c, MAX_SN_LEN );
+	    //strncpy( SSP_configuration.serialNum, c, MAX_SN_LEN );
+	    SSP_configuration.sn = (uint16_t)strtol( c, NULL, 0 );
 
 	    printf( "\tserialNumber:\t%s\r\n", c );
 	 }

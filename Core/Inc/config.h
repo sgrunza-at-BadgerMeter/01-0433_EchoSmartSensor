@@ -87,8 +87,13 @@ typedef enum CFG_LOAD_TYPE_E
 #define DEFAULT_NAME_LEN		strlen(DEFAULT_NAME)
 #define MAX_NAME_LEN			24
 
-#define DEFAULT_SN			"Default SN"
-#define DEFAULT_SN_LEN			strlen(DEFAULT_SN)
+// The serial number is a uint16_t and can be read from 6 two-character
+// wide registers
+//
+// 65535 would be read as 0x3635, 0x3533, 0x3500, 0x0000, 0x0000, 0x0000
+//
+// TODO:  Re-vist how serial numbers are handled in this product
+//
 #define MAX_SN_LEN			12
 
 /******* Bit Definitions for bTrackStatus ****/
@@ -155,6 +160,7 @@ typedef struct SSP_CONFIG_UUID_T
  */
 typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
 {
+   uint16_t		sn;			///< 16-bit serial number
    uint8_t		hw_id;			///< Hardware ID
    uint8_t		fw_ver;			///< Firmware version
    SSP_CFG_EQIP_E	eq_type;		///< equipment type
@@ -202,7 +208,6 @@ typedef struct __attribute__((aligned(4))) SSP_CONFIG_T
    int16_t		minGain;		///< value for DAC to have minimum gain on signal amp
    int16_t		maxGain;		///< value for DAC to have maximum gain on signal amp
    char			name[ MAX_NAME_LEN ];	///< not NULL terminated
-   char			serialNum[ MAX_SN_LEN ];///< not NULL terminated
    uint16_t		turbLoopMin;		///< value that provides 4mA loop current (12-bits) (AuxLoop)
    uint16_t		turbLoopMax;		///< value that provides 20mA loop current (12-bits) (AuxLoop)
 

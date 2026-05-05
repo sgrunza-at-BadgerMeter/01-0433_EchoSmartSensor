@@ -70,6 +70,7 @@ void
       cfg->address = 1;
       cfg->eq_type = EQ_TYPE_PROBE;
       cfg->fw_ver = 0;
+      cfg->sn = 0;
       cfg->hasTurbidity = 0;
       cfg->hasReedSwitch = 0;
       cfg->hasWiper = 0;
@@ -119,7 +120,7 @@ void
       memcpy( cfg->name, DEFAULT_NAME, DEFAULT_NAME_LEN );
 
       //cfg->serialNum[]
-      memcpy( cfg->serialNum, DEFAULT_SN, DEFAULT_SN_LEN );
+      //memcpy( cfg->serialNum, DEFAULT_SN, DEFAULT_SN_LEN );
 
       cfg->turbLoopMin = I_LOOP_MIN;
       cfg->turbLoopMax = I_LOOP_MAX;
