@@ -67,8 +67,6 @@ extern RS485_TRANSMIT_MSG_T	transmit_msg;
 
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart1;
-DMA_HandleTypeDef handle_GPDMA1_Channel1;
-DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
 /* UART4 init function */
 void MX_UART4_Init(void)
@@ -202,61 +200,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF6_UART4;
     HAL_GPIO_Init(RS485_TX_GPIO_Port, &GPIO_InitStruct);
 
-    /* UART4 DMA Init */
-    /* GPDMA1_REQUEST_UART4_TX Init */
-    handle_GPDMA1_Channel1.Instance = GPDMA1_Channel1;
-    handle_GPDMA1_Channel1.Init.Request = GPDMA1_REQUEST_UART4_TX;
-    handle_GPDMA1_Channel1.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
-    handle_GPDMA1_Channel1.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    handle_GPDMA1_Channel1.Init.SrcInc = DMA_SINC_INCREMENTED;
-    handle_GPDMA1_Channel1.Init.DestInc = DMA_DINC_FIXED;
-    handle_GPDMA1_Channel1.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
-    handle_GPDMA1_Channel1.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
-    handle_GPDMA1_Channel1.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
-    handle_GPDMA1_Channel1.Init.SrcBurstLength = 1;
-    handle_GPDMA1_Channel1.Init.DestBurstLength = 1;
-    handle_GPDMA1_Channel1.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT1|DMA_DEST_ALLOCATED_PORT0;
-    handle_GPDMA1_Channel1.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
-    handle_GPDMA1_Channel1.Init.Mode = DMA_NORMAL;
-    if (HAL_DMA_Init(&handle_GPDMA1_Channel1) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_LINKDMA(uartHandle, hdmatx, handle_GPDMA1_Channel1);
-
-    if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA1_Channel1, DMA_CHANNEL_NPRIV) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    /* GPDMA1_REQUEST_UART4_RX Init */
-    handle_GPDMA1_Channel0.Instance = GPDMA1_Channel0;
-    handle_GPDMA1_Channel0.Init.Request = GPDMA1_REQUEST_UART4_RX;
-    handle_GPDMA1_Channel0.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
-    handle_GPDMA1_Channel0.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    handle_GPDMA1_Channel0.Init.SrcInc = DMA_SINC_FIXED;
-    handle_GPDMA1_Channel0.Init.DestInc = DMA_SINC_INCREMENTED;
-    handle_GPDMA1_Channel0.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
-    handle_GPDMA1_Channel0.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
-    handle_GPDMA1_Channel0.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
-    handle_GPDMA1_Channel0.Init.SrcBurstLength = 1;
-    handle_GPDMA1_Channel0.Init.DestBurstLength = 1;
-    handle_GPDMA1_Channel0.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0|DMA_DEST_ALLOCATED_PORT1;
-    handle_GPDMA1_Channel0.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
-    handle_GPDMA1_Channel0.Init.Mode = DMA_NORMAL;
-    if (HAL_DMA_Init(&handle_GPDMA1_Channel0) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_LINKDMA(uartHandle, hdmarx, handle_GPDMA1_Channel0);
-
-    if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA1_Channel0, DMA_CHANNEL_NPRIV) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
     /* UART4 interrupt Init */
     HAL_NVIC_SetPriority(UART4_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(UART4_IRQn);
@@ -322,10 +265,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_DeInit(GPIOB, RS485_DE_Pin|RS485_RX_Pin);
 
     HAL_GPIO_DeInit(RS485_TX_GPIO_Port, RS485_TX_Pin);
-
-    /* UART4 DMA DeInit */
-    HAL_DMA_DeInit(uartHandle->hdmatx);
-    HAL_DMA_DeInit(uartHandle->hdmarx);
 
     /* UART4 interrupt Deinit */
     HAL_NVIC_DisableIRQ(UART4_IRQn);
@@ -714,93 +653,6 @@ void
 
    return;
 } // end of HAL_UART_ErrorCallback()
-
-/**
-  * @brief Receive an amount of data in DMA mode till either the expected number
-  *        of data is received or an Receive Time Out event occurs.
-  * @note  Reception is initiated by this function call. Further progress of reception is achieved thanks
-  *        to DMA services, transferring automatically received data elements in user reception buffer and
-  *        calling registered callbacks at half/end of reception. UART RTO events are also used to consider
-  *        reception phase as ended. In all cases, callback execution will indicate number of received data elements.
-  * @note  When the UART parity is enabled (PCE = 1), the received data contain
-  *        the parity bit (MSB position).
-  * @note  When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),
-  *        the received data is handled as a set of uint16_t. In this case, Size must indicate the number
-  *        of uint16_t available through pData.
-  * @note  When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),
-  *        address of user data buffer for storing data to be received, should be aligned on a half word frontier
-  *        (16 bits) (as received data will be handled by DMA from halfword frontier). Depending on compilation chain,
-  *        use of specific alignment compilation directives or pragmas might be required
-  *        to ensure proper alignment for pData.
-  * @param huart UART handle.
-  * @param pData Pointer to data buffer (uint8_t or uint16_t data elements).
-  * @param Size  Amount of data elements (uint8_t or uint16_t) to be received.
-  * @param timeout	Number of bit times of idle before receive timeout
-  * @retval HAL status
-  */
-HAL_StatusTypeDef
-   HAL_UARTEx_ReceiveToTimeout_DMA(
-      UART_HandleTypeDef 	*huart,
-	  uint8_t 		*pData,
-	  uint16_t 		Size,
-	  uint16_t		timeout )
-{
-   HAL_StatusTypeDef status;
-
-   /* Check that a Rx process is not already ongoing */
-   if (huart->RxState == HAL_UART_STATE_READY)
-   {
-      if ((pData == NULL) || (Size == 0U))
-      {
-	 return HAL_ERROR;
-      }
-
-      /* In case of 9bits/No Parity transfer, pData buffer provided as input parameter
-       should be aligned on a uint16_t frontier, as data copy from RDR will be
-       handled by DMA from a uint16_t frontier. */
-      if ((huart->Init.WordLength == UART_WORDLENGTH_9B) && (huart->Init.Parity == UART_PARITY_NONE))
-      {
-	 if ((((uint32_t)pData) & 1U) != 0U)
-	 {
-	    return  HAL_ERROR;
-	 }
-      }
-
-      /* Set Reception type to reception till Receive Time Out Event*/
-      huart->ReceptionType = HAL_UART_RECEPTION_TORTO;
-      huart->RxEventType = HAL_UART_RXEVENT_TC;
-
-      HAL_UART_ReceiverTimeout_Config( huart, timeout );
-
-      HAL_UART_EnableReceiverTimeout( huart );
-
-      status =  UART_Start_Receive_DMA(huart, pData, Size);
-
-      /* Check Rx process has been successfully started */
-      if (status == HAL_OK)
-      {
-	 if (huart->ReceptionType == HAL_UART_RECEPTION_TORTO)
-	 {
-	    __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_RTOF);
-	    ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_RTOIE);
-	 }
-	 else
-	 {
-	    /* In case of errors already pending when reception is started,
-           Interrupts may have already been raised and lead to reception abortion.
-           (Overrun error for instance).
-           In such case Reception Type has been reset to HAL_UART_RECEPTION_STANDARD. */
-	    status = HAL_ERROR;
-	 }
-      }
-
-      return status;
-   }
-   else
-   {
-      return HAL_BUSY;
-   }
-} // end of HAL_UARTEx_ReceiveToTimeout_DMA()
 
 /**
  **********************************************************************

@@ -25,7 +25,6 @@
 #include "dcache.h"
 #include "dts.h"
 #include "flash.h"
-#include "gpdma.h"
 #include "i2c.h"
 #include "icache.h"
 #include "rtc.h"
@@ -145,9 +144,8 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_GPDMA1_Init();
-  //MX_ICACHE_Init();
-  //MX_DCACHE1_Init();
+  MX_ICACHE_Init();
+  MX_DCACHE1_Init();
   MX_FLASH_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
@@ -239,7 +237,7 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
                               |RCC_CLOCKTYPE_PCLK3;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB3CLKDivider = RCC_HCLK_DIV1;

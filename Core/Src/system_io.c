@@ -91,22 +91,22 @@ void rs485_rx(ULONG thread_input)
 
    while( 1 )
    {
-      retVal = HAL_BUSY;
+      retVal = huart4.RxState;
+
+      // Check on the UART status
+      if( !transmit_msg.tx_active )
+      {
+	 // Not currently transmitting
+	 if (huart4.RxState != HAL_UART_STATE_BUSY_RX )
+	 {
+	    // Not busy with receiving so start a receive
+	    rs485_receive_msg();
+	 }
+      }
 
       // Currently using time-slicing so process messages until there are none left
       while( rs485_buffer.entries > 0 )
       {
-	 // Check on the UART status
-	 if( !transmit_msg.tx_active )
-	 {
-	    // Not currently transmitting
-	    if (huart4.RxState != HAL_UART_STATE_BUSY_RX )
-	    {
-	       // Not busy with receiving so start a receive
-	       rs485_receive_msg();
-	    }
-	 }
-
 	 pADU = (MODBUS_ADU_T *)&buffer;
 
 	 ret = fifo_pop( &rs485_buffer,			// ptr to queue
@@ -813,7 +813,7 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
    uint32_t	responseDelay;	// in ms
 
    // build an response message
-   rs485_prepare_tx_buf( msg->address, msg->fc );
+   rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 
    if( msg->address == 0x00 )
    {
@@ -869,12 +869,12 @@ void rs485_network_poll_cmd( MODBUS_ADU_T *msg )
      {
 	// coils requested beyond range
 	// build an error response
-	rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
 	rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
      }
      else
      {
-	rs485_prepare_tx_buf( msg->address, msg->fc );
+	rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 	numBytes = numRegs / 8;	// number of bytes returned
 	if( numRegs % 8 )
 	{
@@ -949,7 +949,7 @@ void
    {
       // coils requested beyond range
       // build an error response
-      rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+      rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
       rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
    }
    else
@@ -979,7 +979,7 @@ void
       if( result == data )
       {
 	 // write was ok
-	 rs485_prepare_tx_buf( msg->address, msg->fc );
+	 rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 	 rs485_add_tx_byte( msg->payload[0] );	// coil MSB
 	 rs485_add_tx_byte( msg->payload[1] );	// coil LSB
 	 rs485_add_tx_byte( msg->payload[2] );	// 0xFF or 0x00 from msg
@@ -1136,7 +1136,7 @@ void
 	( numRegs <= MAX_MB_COILS_COMM) )
     {
        // Simple error checks are look ok
-       rs485_prepare_tx_buf( msg->address, msg->fc );
+       rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
        rs485_add_tx_byte( numRegs * 2 );	// 2 bytes per register
 
        reg = firstReg;
@@ -1178,7 +1178,7 @@ void
     {
        // coils requested beyond range
        // build an error response
-       rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+       rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
        rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
     }
 
@@ -1207,7 +1207,7 @@ void
    // Not supported
 
    // build an error response
-   rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+   rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
    rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_FUNCTION ); // code 1
 
    // Actually send response
@@ -1245,7 +1245,7 @@ void
        if( m->regAddr <= WAVEFORM_MB_REG_STOP )
        {
 	  // Simple error checks look ok
-	  rs485_prepare_tx_buf( msg->address, msg->fc );
+	  rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 	  rs485_add_tx_byte( m->regAddr >> 8 );
 	  rs485_add_tx_byte( m->regAddr & 0x00FF );
 
@@ -1278,7 +1278,7 @@ void
 	  if( wrResult != m->regData )
 	  {
 	     // Something failed in the write function
-	     rs485_prepare_tx_buf( m->address, m->fc | 0x80 );
+	     rs485_prepare_tx_buf( SSP_configuration.address, m->fc | 0x80 );
 	     rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_VALUE ); // code 3
 	  }
 	  else
@@ -1291,7 +1291,7 @@ void
        {
 	  // register address requested beyond range
 	  // build an error response
-	  rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	  rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
 	  rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_ADDRESS ); // code 2
        }
 
@@ -1340,7 +1340,7 @@ void
            (m->byteCount == m->regNum * 2) )
        {
 	  // Simple error checks are look ok
-	  rs485_prepare_tx_buf( msg->address, msg->fc );
+	  rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 	  rs485_add_tx_byte( m->regAddr >> 8 );
 	  rs485_add_tx_byte( m->regAddr & 0x00FF );
 	  // need to put number of bytes written next
@@ -1390,7 +1390,7 @@ void
 	  else
 	  {
 	     // Something went wrong
-	     rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	     rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
 	     rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_VALUE ); // code 3
 	  }
        }
@@ -1398,7 +1398,7 @@ void
        {
 	  // coils requested beyond range
 	  // build an error response
-	  rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	  rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
 	  if( m->byteCount != m->regNum * 2 )
 	  {
 	     rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_DATA_VALUE ); // code 3

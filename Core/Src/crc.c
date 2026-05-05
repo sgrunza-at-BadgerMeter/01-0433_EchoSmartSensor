@@ -34,14 +34,14 @@ void MX_CRC_Init(void)
 
   /* USER CODE END CRC_Init 0 */
 
-   /* USER CODE BEGIN CRC_Init 1 */
+  /* USER CODE BEGIN CRC_Init 1 */
    /* Set Modbus specific parameters */
    hcrc.Init.GeneratingPolynomial	= 0x8005;              // Modbus polynomial
    hcrc.Init.CRCLength			= CRC_POLYLENGTH_16B;  // 16-bit CRC
    hcrc.Init.InitValue			= 0xFFFF;              // Start value
 
-   /* USER CODE END CRC_Init 1 */
-   hcrc.Instance = CRC;
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
   hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_DISABLE;
   hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_DISABLE;
   hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_BYTE;

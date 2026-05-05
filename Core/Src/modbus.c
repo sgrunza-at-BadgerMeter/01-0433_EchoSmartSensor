@@ -3103,7 +3103,7 @@ void
 	    if( sub_fc == 10 )
 	    {
 	       // Build the response message
-		rs485_prepare_tx_buf( msg->address, msg->fc );
+		rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 		rs485_add_tx_byte( sub_fc );
 		rs485_transmit_now();	// send the message
 		HAL_Delay( 10 );
@@ -3116,28 +3116,28 @@ void
 	    break;
 
 	 case 11:	// Return bus message count
-	    rs485_prepare_tx_buf( msg->address, msg->fc );
+	    rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 	    rs485_add_tx_byte( sub_fc );
 	    rs485_add_tx_byte( (SSP_status.bus_msg_count & 0x0000FF00) >> 8 );
 	    rs485_add_tx_byte( (SSP_status.bus_msg_count & 0x000000FF) );
 	    break;
 
 	 case 12:	// Return bus CRC error count
-	    rs485_prepare_tx_buf( msg->address, msg->fc );
+	    rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 	    rs485_add_tx_byte( sub_fc );
 	    rs485_add_tx_byte( (SSP_status.bus_crc_err_count & 0x0000FF00) >> 8 );
 	    rs485_add_tx_byte( (SSP_status.bus_crc_err_count & 0x000000FF) );
 	    break;
 
 	 case 14:	// return slave message count
-	    rs485_prepare_tx_buf( msg->address, msg->fc );
+	    rs485_prepare_tx_buf( SSP_configuration.address, msg->fc );
 	    rs485_add_tx_byte( sub_fc );
 	    rs485_add_tx_byte( (SSP_status.slave_msg_count & 0x0000FF00) >> 8 );
 	    rs485_add_tx_byte( (SSP_status.slave_msg_count & 0x000000FF) );
 	    break;
 
 	 default:
-	    rs485_prepare_tx_buf( msg->address, msg->fc | 0x80 );
+	    rs485_prepare_tx_buf( SSP_configuration.address, msg->fc | 0x80 );
 	    rs485_add_tx_byte( MBUS_RESPONSE_ILLEGAL_FUNCTION );
 	    break;
       } // end of switch()

@@ -391,6 +391,8 @@ MB_REG_CMD_T	reg_commands[]
 #define MAX_MB_COILS_COMM	80	/* Maximum number of consecutive coils IO can support */
 
 
+
+
 #endif /* INC_MODBUS_H_ */
 
 // end of file modbus.h

@@ -156,7 +156,9 @@ void
    rs485_writeCoil(
       MODBUS_ADU_T 	*msg );
 
-
+void
+   rs485_diagnostics(
+      MODBUS_ADU_T 		*msg );
 
 
 #endif /* INC_SYSTEM_IO_H_ */
