@@ -16,6 +16,9 @@
 
 /**************** Constants ********************/
 
+#define BD_LEN		8		// for CMD_EXT_ID_REQ message
+#define MAX_NAME_LEN	24
+
 /* ModBus Function Codes. Note: SSP Protocol Uses Function Codes 65-72, 100-119 */
 #define MODBUS_READ_COIL		0x01	/* Function Code 1 */
 #define MODBUS_READ_HOLDING_REG		0x03	/* Function Code 3 */
@@ -107,6 +110,33 @@ typedef struct MODBUS_ADU_T
    uint8_t	fc;		// function code
    uint8_t	payload[2];	// variable length data plus error check
 } MODBUS_ADU_T;		// MODBUS Application Data Unit
+
+typedef struct MODBUS_EXTID_REQ_T
+{
+   uint16_t	length;		// number of bytes in the ADU
+   uint8_t	address;	// address -- first byte of the message
+   uint8_t	fc;		// function code
+   uint8_t	sam;		// Status / Access Mode
+   uint8_t	name[ MAX_NAME_LEN ];	// might not be null terminated
+   uint8_t	buildDate[ BD_LEN ];	// MMDDYYYY
+   uint16_t	crc;
+} MODBUS_EXTID_REQ_T;
+
+typedef struct MODBUS_ECHO_CTRL_CMD_T
+{
+   uint16_t	length;		// number of bytes in the ADU
+   uint8_t	address;	// address -- first byte of the message
+   uint8_t	fc;		// function code
+   uint8_t	sam;		// Status / Access Mode
+   uint8_t	echoCtrl;	// Echo control bit field
+   uint8_t	pingRate;	// ping rate [0, 255] in 10 mS units
+   uint8_t	updateRate;	// update rate [0, 20] 1 = 8 waves, 2 = 16 waves
+				// [0, 250] if waveform is composite
+   uint8_t	smoothingRate;	// smoothing rate [0 25]
+   uint8_t	deltaSmoothingRate;	// [0, 25]
+   uint8_t	saveWaveform;	//
+   uint16_t	crc;
+} MODBUS_ECHO_CTRL_CMD_T;
 
 typedef struct MODBUS_ADU_REG_WRITE_T
 {

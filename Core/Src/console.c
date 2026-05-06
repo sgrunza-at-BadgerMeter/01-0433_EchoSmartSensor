@@ -676,8 +676,10 @@ void cmd_rs485( char     *msg )
 	    done = true;
 	    if( rs485_usmsg_allowed )
 	    {
+	       MODBUS_ADU_T 	msg;
+
 	       printf("send an unsolicited SSP ID message\r\n");
-	       IdRequestCmd();
+	       IdRequestCmd( &msg );
 	    }
 	    else
 	    {

@@ -16,6 +16,21 @@
 /* Modified to co-exist with ModBus Function Codes. SSP Protocol Uses Function Codes 65-72, 100-119 */
 
 #define SAM_RESPONSE	0x80		/* Bit b7 set to show data is a response */
+#define SAM_WRITE	0x01		/* bit b0 set to show data is a write */
+
+
+/* Bit Definitions in Echo Control Cmd 0x42 */
+#define EC_ENABLE_PING		0x01		/* Enable Ping cycle */
+#define EC_TX_PULSE_BLANK	0x02		/* Enable Blanking period after TX pulse */
+#define EC_COMPOSITE_WF		0x04		/* Composite Waveform vs Average Waveform */
+#define EC_SINGLE_STEP		0x08		/* Single Step Mode */
+
+/* Definitions for SAM byte used with Echo Control Cmd */
+#define EC_SAM_ECB			0x01		/* Save Echo COntrol Byte */
+#define EC_SAM_PRB			0x02		/* Save Ping Rate Byte */
+#define EC_SAM_URB			0x04		/* Save Update Rate Byte */
+#define EC_SAM_SRB			0x08		/* Save Smoothing Rate Byte */
+#define EC_SAM_DSR			0x10		/* Save Delta Smoothing Rate Byte */
 
 /**
  * @brief This enumeration holds the function codes for SSP messages
@@ -58,6 +73,16 @@ typedef enum SSP_CMDS_E : unsigned char
 } SSP_CMDS_E;
 
 
-void IdRequestCmd( void );
+void
+   IdRequestCmd(
+      MODBUS_ADU_T 	*msg );
+
+void
+   EchoControlCmd(
+      MODBUS_ADU_T 	*msg );
+
+void
+   ExtIdRequestCmd(
+      MODBUS_ADU_T 	*msg );
 
 #endif /* INC_SSP_COM_H_ */

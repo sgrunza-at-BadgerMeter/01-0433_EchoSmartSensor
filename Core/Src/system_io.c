@@ -739,9 +739,19 @@ void rs485_decode_command( MODBUS_ADU_T *msg )
 			__FILE__, __LINE__ );
 	       break;
 
-	    case CMD_ID_REQ:
+	    case CMD_ID_REQ:			// function code 41
+	       IdRequestCmd( msg );
+	       break;
 
-	    case CMD_EXT_ID_REQ:
+	    case CMD_EXT_ID_REQ:		// function code 0x42
+	       ExtIdRequestCmd( msg );
+	       break;
+
+	    case CMD_ECHO_CONTROL:		// function code 0x68
+	       EchoControlCmd( msg );
+	       break;
+
+
 
 	    case CMD_TANK_CFG:
 
@@ -758,8 +768,6 @@ void rs485_decode_command( MODBUS_ADU_T *msg )
 	    case CMD_ECHO_DATA:
 
 	    case CMD_MANUAL_GAIN:
-
-	    case CMD_ECHO_CONTROL:
 
 	    case CMD_CANDIDATE:
 

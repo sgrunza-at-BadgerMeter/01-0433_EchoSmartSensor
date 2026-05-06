@@ -128,6 +128,22 @@ typedef enum CFG_LOAD_TYPE_E
 #define TURB_DRIVER_ERROR	0x40	/* Driver for Turbidity LED bad */
 #define LOW_POWER_M0DE		0x80	/* Sensor in stanby (Low Power) Mode */
 
+// Defines for bitFlags in SSP_STATUS_T
+#define MEASURE_BIT		0x01	/* Bit Location of Measure Flag */
+#define MEASURE_LEVEL		0x00 	/* Measure is in Level */
+#define MEASURE_RANGE		0x01	/* Measure is in Range */
+#define AUTO_GAIN_BIT		0x02	/* Bit Location of Auto Gain Flag */
+#define AUTO_GAIN_OFF		0x00	/* Auto Gain is set OFF */
+#define AUTO_GAIN_ON		0x02	/* Auto Gain is set ON */
+#define ECHO_LOSS_BIT		0x04	/* Bit Location of Echo Loss Flag */
+#define ECHO_LOSS_OFF		0x00	/* Echo Loss is set OFF */
+#define ECHO_LOSS_ON		0x04	/* Echo Loss is set ON */
+#define WIPER_INSTALLED		0x08	/* Bit Set If Wiper Installed */
+#define TURBIDITY_INSTALLED	0x10	/* Bit Set If Turbidity Circuit Installed */
+#define COMPOSITE_WF		0x20	/* Bit set for composite waveform */
+#define USE_FIXED_GAIN_BAND	0x40	/* Bit set to use fixed gain band mid point */
+#define NEED_SETUP		0x80	/* Bit Set if unit requires setup */
+
 
 /**
  * @brief Definition of the types of equipment in the system
@@ -279,6 +295,9 @@ typedef struct SSP_STATUS_T
    uint8_t		bTrackStatus;		///< Bit mapped field, including LOS_INDICATOR, etc
    uint8_t		bLoopStatus;		///< Bit mapped field, including LEVEL_LOOP_ACTIVE, etc
    uint8_t		bProbeStatus;		///< Bit mapped field, including TURB_LED_ERROR
+   uint8_t		bEchoControl;		///< Bit mapped field, including EC_COMPOSITE_WF, etc
+
+   uint8_t		bitFlags;		///< Bit mapped field, including COMPOSITE_WF, etc
 
    uint16_t		levelLoop_value;	///< Level 4-20 mA
    uint16_t		auxLoop_value;		///< Aux 4-20 mA
@@ -292,6 +311,9 @@ typedef struct SSP_STATUS_T
    float		fTrackMeasurement;	///< Current Track Measurement
    uint16_t		wiperMotorVoltage;	///< wiper motor voltage in mV
    float		fDensity;		///< TBD
+
+   uint8_t		nextWF;			///< defined as a bit in original code, set every time user request a
+						// waveform using ping control
 
 } SSP_STATUS_T;
 

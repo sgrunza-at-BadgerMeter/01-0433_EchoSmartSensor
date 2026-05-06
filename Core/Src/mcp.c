@@ -21,6 +21,8 @@
 #include "wiper.h"
 #include "system_io.h"
 #include "dts.h"
+#include "ssp_com.h"
+#include "modbus.h"
 
 
 #define SRC_MCP_C_
